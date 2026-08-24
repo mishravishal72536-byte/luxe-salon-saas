@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Owner Studio Control - Luxe Salon</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b', dark: '#d97706', light: '#fbbf24' } } } }
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+    .modal-enter { animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
+
+  <!-- Halt Modal Overlay -->
+  <div id="haltScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⏸</div>
+      <div>
+        <h2 class="text-lg font-black text-white">Access Suspended</h2>
+        <p id="haltReasonMsg" class="text-xs text-neutral-400 mt-1">Your salon access has been halted by admin.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Passcode Auth Screen with Salon Name & PIN -->
+  <div id="authScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-40">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🔐</div>
+      <div>
+        <h2 id="authTitle" class="text-lg font-black text-white">Owner Studio Login</h2>
+        <p id="authSubtitle" class="text-xs text-neutral-400 mt-1">Enter your salon name and 4-digit PIN.</p>
+      </div>
+
+      <div class="space-y-3 text-left pt-1">
+        <div>
+          <label class="text-[11px] text-neutral-400 block mb-1 font-semibold">Salon Name</label>
+          <input id="authSalonNameInput" type="text" placeholder="e.g. Raju Nai" oninput="updateSlugPreview()" class="w-full bg-neutral-950 border border-neutral-800 text-sm text-white focus:border-amber-400 rounded-xl px-3.5 py-2.5 focus:outline-none">
+        </div>
+        <div>
+          <label class="text-[11px] text-neutral-400 block mb-1 font-semibold">Security PIN</label>
+          <input id="authPinInput" type="password" maxlength="8" placeholder="Enter PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-2.5 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
+        </div>
+        <button id="authActionBtn" onclick="submitAuth()" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md mt-1">
+          Unlock Dashboard ➔
+        </button>
+        <p id="authErrorMsg" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
+      </div>
+
+      <div class="border-t border-neutral-800/80 pt-3 text-[11px] text-neutral-500 font-mono text-center">
+        Salon ID Slug: <span id="authTenantSlugBadge" class="text-amber-400 font-bold">demo-salon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owner Change PIN Modal -->
+  <div id="changePinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 modal-enter">
+      <h3 class="text-sm font-extrabold text-amber-500 uppercase">Change Studio PIN</h3>
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="text-xs text-slate-500 dark:text-neutral-400 block mb-1">Current PIN</label>
+          <input id="currOwnerPin" type="password" maxlength="8" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white font-mono focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-slate-500 dark:text-neutral-400 block mb-1">New PIN (Min 4 digits)</label>
+          <input id="newOwnerPin" type="password" maxlength="8" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white font-mono focus:outline-none">
+        </div>
+      </div>
+      <p id="changePinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px]"></p>
+      <div class="flex gap-2 pt-1">
+        <button onclick="document.getElementById('changePinModal').classList.add('hidden')" class="flex-1 py-2 text-xs bg-slate-100 dark:bg-neutral-800 rounded-xl">Cancel</button>
+        <button onclick="submitOwnerPinChange()" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-xl">Save PIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Owner App Container -->
+  <div class="max-w-5xl mx-auto w-full space-y-4 sm:space-y-6">
+    <div class="bg-white dark:bg-neutral-900/90 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex items-center justify-between w-full sm:w-auto">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="shopTitle" class="text-lg sm:text-xl font-black text-amber-500 dark:text-amber-400 tracking-tight uppercase">DELUXE SALON</h1>
+            <button onclick="openShopNameModal()" class="text-[11px] text-slate-500 dark:text-neutral-400 hover:text-amber-500 bg-slate-100 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-2 py-0.5 rounded-lg transition-all font-semibold">✏️ Rename</button>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-500">Live Counter & Dispatch Studio</p>
+        </div>
+
+        <div class="flex sm:hidden items-center gap-1.5">
+          <button onclick="openChangePinModal()" title="Change PIN" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🔑</button>
+          <button onclick="lockStudio()" title="Lock Studio" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-xs flex items-center justify-center">🔒</button>
+          <button onclick="fetchState()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-sm flex items-center justify-center">↻</button>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-between sm:justify-end">
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <button onclick="openQRModal()" class="flex-1 sm:flex-none text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1">
+            <span>📷</span> Print QR
+          </button>
+          <button id="voiceToggleBtn" onclick="toggleVoice()" class="flex-1 sm:flex-none text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-center gap-1 transition-all">
+            <span>🔊</span> Voice: ON
+          </button>
+        </div>
+        <div class="hidden sm:flex items-center gap-1.5">
+          <button onclick="openChangePinModal()" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-amber-500 font-semibold">🔑 PIN</button>
+          <button onclick="toggleTheme()" id="themeToggleBtn" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-slate-700 dark:text-neutral-300 font-semibold flex items-center gap-1 transition-all">
+            <span id="themeIcon">🌙</span> <span id="themeText">Dark</span>
+          </button>
+          <button onclick="lockStudio()" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-red-500 font-semibold">🔒 Lock</button>
+          <button onclick="fetchState()" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-slate-700 dark:text-neutral-300">↻</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-sm">
+        <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Served Today</span>
+        <div id="statGuests" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono-num mt-0.5">0</div>
+      </div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-sm">
+        <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Today's Revenue</span>
+        <div id="statRevenue" class="text-xl sm:text-2xl font-black text-amber-500 dark:text-amber-400 font-mono-num mt-0.5">₹0</div>
+      </div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-sm">
+        <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">In Waiting</span>
+        <div id="statWaiting" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono-num mt-0.5">0</div>
+      </div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-sm flex flex-col justify-between">
+        <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Daily Session</span>
+        <button onclick="resetDayPrompt()" class="text-[11px] text-red-500 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 border border-red-200 dark:border-red-900/40 rounded-xl py-1 px-2 font-bold transition-all text-center mt-1">↺ Reset Day</button>
+      </div>
+    </div>
+
+    <!-- Operating Chairs -->
+    <div>
+      <div class="flex justify-between items-center mb-2.5">
+        <h2 class="text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-widest">Operating Chairs</h2>
+        <div class="flex items-center gap-1.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-1 rounded-xl shadow-sm">
+          <button onclick="adjustChairs(-1)" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-800 dark:text-white font-bold flex items-center justify-center">-</button>
+          <span id="chairCountBadge" class="text-xs font-black text-amber-500 dark:text-amber-400 px-2 font-mono-num">3 Chairs</span>
+          <button onclick="adjustChairs(1)" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-800 dark:text-white font-bold flex items-center justify-center">+</button>
+        </div>
+      </div>
+      <div id="chairsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
+    </div>
+
+    <!-- Waiting Line -->
+    <div class="bg-white dark:bg-neutral-900/80 border border-slate-200 dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="text-sm font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Live Waiting Line</h2>
+          <p class="text-[11px] text-slate-500">Auto-moves to the next empty seat</p>
+        </div>
+        <span id="qCount" class="text-xs bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2.5 py-1 rounded-full font-bold">0 Waiting</span>
+      </div>
+      <div id="queueList" class="space-y-2"></div>
+    </div>
+
+    <!-- Services Catalog -->
+    <div class="bg-white dark:bg-neutral-900/80 border border-slate-200 dark:border-neutral-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 class="text-sm font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Services & Rates</h2>
+          <p class="text-[11px] text-slate-500">Tap edit to change rate or service time</p>
+        </div>
+        <button onclick="openServiceModal()" class="text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-1.5 rounded-xl">+ Add</button>
+      </div>
+      <div id="servicesEditorGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+    </div>
+  </div>
+
+  <footer class="w-full py-5 text-center text-xs text-slate-400 dark:text-neutral-500 space-x-3 border-t border-slate-200 dark:border-neutral-900 mt-6">
+    <span>© 2026 Luxe Queue SaaS</span>
+    <span>•</span>
+    <a href="terms.html" target="_blank" class="hover:text-amber-500">Terms of Service</a>
+    <span>•</span>
+    <a href="privacy.html" target="_blank" class="hover:text-amber-500">Privacy Policy</a>
+  </footer>
+
+  <!-- QR Modal -->
+  <div id="qrModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 text-center modal-enter">
+      <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+        <h3 class="text-xs font-extrabold text-amber-500 uppercase">Print QR Standee</h3>
+        <button onclick="closeQRModal()" class="text-slate-400 text-lg font-bold">✕</button>
+      </div>
+      <div id="printArea" class="bg-white text-black p-5 rounded-2xl border border-slate-200 text-center space-y-3">
+        <h2 id="printShopTitle" class="text-base font-black uppercase">DELUXE SALON</h2>
+        <p class="text-[11px] text-slate-600 font-bold">Scan to Check-In & Track Live Wait Time</p>
+        <div id="qrcodeBox" class="flex justify-center p-2 bg-white rounded-xl"></div>
+        <a id="qrLinkText" href="#" target="_blank" class="text-[9px] text-amber-600 hover:underline font-mono break-all font-semibold block"></a>
+        <p class="text-[10px] text-slate-500 font-mono">No App Required • Live Web Pass</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="closeQRModal()" class="flex-1 py-2 rounded-xl text-xs bg-slate-100 dark:bg-neutral-800">Close</button>
+        <button onclick="window.print()" class="flex-1 py-2 rounded-xl text-xs bg-amber-500 text-slate-950 font-extrabold">🖨️ Print</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Edit Modal -->
+  <div id="customModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-4 modal-enter">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-neutral-800 pb-3">
+        <h3 id="modalTitle" class="text-base font-extrabold text-amber-500">Edit Service</h3>
+        <button onclick="closeModal()" class="text-slate-400 font-bold">✕</button>
+      </div>
+      <input type="hidden" id="editServiceIndex" value="-1">
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs text-slate-500 block mb-1 font-semibold">Service Name</label>
+          <input id="modalServiceName" type="text" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-500 block mb-1 font-semibold">Price (₹)</label>
+            <input id="modalServicePrice" type="number" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm font-mono-num">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1 font-semibold">Duration (Mins)</label>
+            <input id="modalServiceDuration" type="number" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm font-mono-num">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs bg-slate-100 dark:bg-neutral-800">Cancel</button>
+        <button onclick="saveModalService()" class="px-5 py-2 rounded-xl text-xs bg-amber-500 text-slate-950 font-extrabold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shop Name Modal -->
+  <div id="shopNameModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-3 modal-enter">
+      <h3 class="text-sm font-extrabold text-amber-500 uppercase">Change Salon Name</h3>
+      <input id="modalShopNameInput" type="text" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm">
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeShopNameModal()" class="px-4 py-2 rounded-xl text-xs text-slate-500 bg-slate-100 dark:bg-neutral-800">Cancel</button>
+        <button onclick="saveShopNameModal()" class="px-5 py-2 rounded-xl text-xs bg-amber-500 text-slate-950 font-extrabold">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000')
+      ? 'http://localhost:5000/api'
+      : `${window.location.origin}/api`;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let tenantSlug = urlParams.get('salon') || '';
+    let isFirstTimeSetup = false;
+
+    function updateSlugPreview() {
+      const nameVal = document.getElementById('authSalonNameInput').value.trim();
+      const slug = nameVal ? nameVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : 'demo-salon';
+      document.getElementById('authTenantSlugBadge').innerText = slug;
+    }
+
+    function getOwnerToken() { 
+      return localStorage.getItem(`${tenantSlug}_jwt_token`); 
+    }
+
+    async function checkAuthOnLoad() {
+      if (!tenantSlug) {
+        document.getElementById('authScreen').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('authTenantSlugBadge').innerText = tenantSlug;
+      
+      const token = getOwnerToken();
+
+      if (token) {
+        document.getElementById('authScreen').classList.add('hidden');
+        initShopName();
+        fetchState();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode: '' })
+        });
+        const data = await res.json();
+
+        if (data.status === 'HALTED') {
+          document.getElementById('authScreen').classList.add('hidden');
+          document.getElementById('haltReasonMsg').innerText = data.message;
+          document.getElementById('haltScreen').classList.remove('hidden');
+          return;
+        }
+
+        document.getElementById('haltScreen').classList.add('hidden');
+
+        if (data.status === 'FIRST_TIME') {
+          isFirstTimeSetup = true;
+          document.getElementById('authTitle').innerText = 'Set Owner Passcode';
+          document.getElementById('authSubtitle').innerText = 'Enter your salon name and create a 4-digit PIN.';
+          document.getElementById('authActionBtn').innerText = 'Save PIN & Enter ➔';
+          document.getElementById('authScreen').classList.remove('hidden');
+        } else {
+          isFirstTimeSetup = false;
+          document.getElementById('authTitle').innerText = 'Owner Studio Login';
+          document.getElementById('authSubtitle').innerText = 'Enter your salon name and 4-digit PIN.';
+          document.getElementById('authActionBtn').innerText = 'Unlock Studio ➔';
+          document.getElementById('authScreen').classList.remove('hidden');
+        }
+      } catch (e) {
+        document.getElementById('authScreen').classList.remove('hidden');
+      }
+    }
+
+    async function submitAuth() {
+      const salonName = document.getElementById('authSalonNameInput').value.trim();
+      const pin = document.getElementById('authPinInput').value.trim();
+      const errBox = document.getElementById('authErrorMsg');
+      errBox.innerText = '';
+
+      if (!salonName) { errBox.innerText = 'Please enter your salon name.'; return; }
+      if (!pin || pin.length < 4) { errBox.innerText = 'PIN must be at least 4 digits.'; return; }
+
+      tenantSlug = salonName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      localStorage.setItem(`${tenantSlug}_shop_name`, salonName);
+
+      let endpoint = isFirstTimeSetup ? `${API_BASE}/${tenantSlug}/auth/set-passcode` : `${API_BASE}/${tenantSlug}/auth/verify`;
+      let payload = isFirstTimeSetup ? { newPasscode: pin } : { passcode: pin };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok && (data.success || data.authenticated || data.token || isFirstTimeSetup)) {
+          const token = data.token || ('jwt_token_' + tenantSlug);
+          localStorage.setItem(`${tenantSlug}_jwt_token`, token);
+          
+          document.getElementById('authScreen').classList.add('hidden');
+          try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
+
+          const newUrl = `${window.location.pathname}?salon=${tenantSlug}`;
+          window.history.replaceState({}, '', newUrl);
+
+          initShopName();
+          fetchState();
+        } else {
+          errBox.innerText = data.message || data.error || '❌ Incorrect PIN or Setup failed.';
+        }
+      } catch (e) {
+        errBox.innerText = 'Connection error.';
+      }
+    }
+
+    function openChangePinModal() {
+      document.getElementById('currOwnerPin').value = '';
+      document.getElementById('newOwnerPin').value = '';
+      document.getElementById('changePinErrMsg').innerText = '';
+      document.getElementById('changePinModal').classList.remove('hidden');
+    }
+
+    async function submitOwnerPinChange() {
+      const currentPasscode = document.getElementById('currOwnerPin').value.trim();
+      const newPasscode = document.getElementById('newOwnerPin').value.trim();
+      const errBox = document.getElementById('changePinErrMsg');
+      errBox.innerText = '';
+      const token = getOwnerToken();
+      if (!token) { lockStudio(); return; }
+
+      try {
+        const res = await fetch(`${API_BASE}/${tenantSlug}/auth/change-passcode`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ currentPasscode, newPasscode })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.token) {
+          localStorage.setItem(`${tenantSlug}_jwt_token`, data.token);
+          alert('Studio PIN changed successfully!');
+          document.getElementById('changePinModal').classList.add('hidden');
+        } else { errBox.innerText = data.message || 'Failed to change PIN.'; }
+      } catch (e) { errBox.innerText = 'Connection error.'; }
+    }
+
+    function lockStudio() {
+      localStorage.removeItem(`${tenantSlug}_jwt_token`);
+      window.location.href = 'owner.html';
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('luxe_theme') || 'dark';
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        updateThemeUI('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        updateThemeUI('light');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      const theme = isDark ? 'dark' : 'light';
+      localStorage.setItem('luxe_theme', theme);
+      updateThemeUI(theme);
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('themeIcon');
+      const text = document.getElementById('themeText');
+      if (theme === 'dark') {
+        if (icon) icon.innerText = '🌙';
+        if (text) text.innerText = 'Dark';
+      } else {
+        if (icon) icon.innerText = '☀️';
+        if (text) text.innerText = 'Light';
+      }
+    }
+
+    let totalChairsCount = parseInt(localStorage.getItem(`${tenantSlug}_chairs`)) || 3;
+    let chairs = [];
+    let queue = [];
+    let isProcessingAutoDispatch = false;
+    let isVoiceEnabled = localStorage.getItem('salon_voice_calling') !== 'false';
+
+    function initChairs() {
+      chairs = [];
+      for (let i = 1; i <= totalChairsCount; i++) {
+        chairs.push({ chairNumber: i, status: 'FREE', currentToken: null, customerName: '', services: [] });
+      }
+      document.getElementById('chairCountBadge').innerText = `${totalChairsCount} Chairs`;
+    }
+
+    function adjustChairs(delta) {
+      const newCount = totalChairsCount + delta;
+      if (newCount < 1 || newCount > 12) return;
+      totalChairsCount = newCount;
+      localStorage.setItem(`${tenantSlug}_chairs`, totalChairsCount);
+      initChairs();
+      fetchState();
+    }
+
+    function announceTurn(tokenNumber, chairNumber) {
+      if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const text = `Token number ${tokenNumber}, please proceed to Chair number ${chairNumber}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleVoice() {
+      isVoiceEnabled = !isVoiceEnabled;
+      localStorage.setItem('salon_voice_calling', isVoiceEnabled);
+      const btn = document.getElementById('voiceToggleBtn');
+      btn.innerHTML = isVoiceEnabled ? '<span>🔊</span> Voice: ON' : '<span>🔇</span> Voice: OFF';
+    }
+
+    const defaultServices = [
+      { id: 'haircut', name: 'Haircut', price: 150, duration: 20 },
+      { id: 'beard', name: 'Beard Trim', price: 100, duration: 15 },
+      { id: 'combo', name: 'Haircut + Beard', price: 230, duration: 30 }
+    ];
+
+    function getServices() {
+      const saved = localStorage.getItem(`${tenantSlug}_services_list`);
+      return saved ? JSON.parse(saved) : defaultServices;
+    }
+
+    function saveServices(list) {
+      localStorage.setItem(`${tenantSlug}_services_list`, JSON.stringify(list));
+      renderServicesEditor();
+    }
+
+    function openServiceModal(index = -1) {
+      const modal = document.getElementById('customModal');
+      const title = document.getElementById('modalTitle');
+      const nameInput = document.getElementById('modalServiceName');
+      const priceInput = document.getElementById('modalServicePrice');
+      const durInput = document.getElementById('modalServiceDuration');
+      const indexInput = document.getElementById('editServiceIndex');
+
+      indexInput.value = index;
+      if (index >= 0) {
+        const item = getServices()[index];
+        title.innerText = `Edit: ${item.name}`;
+        nameInput.value = item.name;
+        priceInput.value = item.price;
+        durInput.value = item.duration || 20;
+      } else {
+        title.innerText = 'Add New Service';
+        nameInput.value = ''; priceInput.value = ''; durInput.value = '20';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() { document.getElementById('customModal').classList.add('hidden'); }
+
+    function saveModalService() {
+      const index = parseInt(document.getElementById('editServiceIndex').value);
+      const name = document.getElementById('modalServiceName').value.trim();
+      const price = parseFloat(document.getElementById('modalServicePrice').value);
+      const duration = parseInt(document.getElementById('modalServiceDuration').value);
+      if (!name || isNaN(price) || isNaN(duration)) return;
+
+      const list = getServices();
+      if (index >= 0) {
+        list[index].name = name; list[index].price = price; list[index].duration = duration;
+      } else {
+        list.push({ id: 'srv_' + Date.now(), name, price, duration });
+      }
+      saveServices(list);
+      closeModal();
+    }
+
+    function deleteService(index) {
+      const list = getServices();
+      if (confirm(`Remove service?`)) { list.splice(index, 1); saveServices(list); }
+    }
+
+    function renderServicesEditor() {
+      const list = getServices();
+      document.getElementById('servicesEditorGrid').innerHTML = list.map((s, idx) => `
+        <div class="bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-3 rounded-xl flex justify-between items-center">
+          <div>
+            <p class="text-xs font-bold text-slate-800 dark:text-white">${s.name}</p>
+            <span class="text-xs font-black text-amber-500 font-mono-num">₹${s.price}</span>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="openServiceModal(${idx})" class="text-[11px] bg-white dark:bg-neutral-900 border border-slate-200 px-2 py-1 rounded-lg">✏️</button>
+            <button onclick="deleteService(${idx})" class="text-[11px] text-red-500 p-1">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openQRModal() {
+      const shopName = localStorage.getItem(`${tenantSlug}_shop_name`) || 'DELUXE SALON';
+      document.getElementById('printShopTitle').innerText = shopName;
+      const qrBox = document.getElementById('qrcodeBox');
+      qrBox.innerHTML = '';
+      
+      const host = window.location.origin;
+      const targetCustomerUrl = `${host}/customer.html?salon=${tenantSlug}`;
+      
+      const linkEl = document.getElementById('qrLinkText');
+      linkEl.href = targetCustomerUrl;
+      linkEl.innerText = targetCustomerUrl;
+
+      new QRCode(qrBox, {
+        text: targetCustomerUrl, width: 170, height: 170,
+        colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H
+      });
+      document.getElementById('qrModal').classList.remove('hidden');
+    }
+
+    function closeQRModal() { document.getElementById('qrModal').classList.add('hidden'); }
+    function openShopNameModal() {
+      document.getElementById('modalShopNameInput').value = localStorage.getItem(`${tenantSlug}_shop_name`) || '';
+      document.getElementById('shopNameModal').classList.remove('hidden');
+    }
+    function closeShopNameModal() { document.getElementById('shopNameModal').classList.add('hidden'); }
+
+    async function saveShopNameModal() {
+      const newName = document.getElementById('modalShopNameInput').value.trim();
+      const token = getOwnerToken();
+      if (newName && token) {
+        localStorage.setItem(`${tenantSlug}_shop_name`, newName);
+        initShopName();
+        try {
+          await fetch(`${API_BASE}/${tenantSlug}/rename`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ shopName: newName })
+          });
+        } catch (e) {}
+      }
+      closeShopNameModal();
+    }
+
+    function initShopName() {
+      const savedName = localStorage.getItem(`${tenantSlug}_shop_name`) || tenantSlug.replace(/-/g, ' ').toUpperCase();
+      document.getElementById('shopTitle').innerText = savedName;
+      document.title = `${savedName} - Owner Control`;
+    }
+
+    async function resetDayPrompt() {
+      if (confirm('Start a fresh new day?')) {
+        const token = getOwnerToken();
+        try {
+          const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, {
+            method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            document.getElementById('statGuests').innerText = '0';
+            document.getElementById('statRevenue').innerText = '₹0';
+          }
+        } catch (e) {}
+      }
+    }
+
+    async function fetchState() {
+      try {
+        const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
+        if (res.status === 403) {
+          document.getElementById('haltScreen').classList.remove('hidden');
+          return;
+        }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.queue) queue = data.queue;
+          if (data.chairs) {
+            for (let i = 0; i < totalChairsCount; i++) {
+              if (data.chairs[i]) chairs[i] = data.chairs[i];
+            }
+          }
+          document.getElementById('statGuests').innerText = data.todayServed || 0;
+          document.getElementById('statRevenue').innerText = `₹${(data.todayRevenue || 0).toLocaleString('en-IN')}`;
+          document.getElementById('statWaiting').innerText = (data.queue && data.queue.length) || 0;
+        }
+      } catch (e) {}
+
+      await checkAndAutoDispatch();
+      render();
+    }
+
+    async function checkAndAutoDispatch() {
+      if (isProcessingAutoDispatch || queue.length === 0) return;
+      const token = getOwnerToken();
+      if (!token) return;
+
+      const freeChair = chairs.find(c => c.status === 'FREE');
+      if (freeChair && queue.length > 0) {
+        isProcessingAutoDispatch = true;
+        const nextCustomer = queue[0];
+        try {
+          await fetch(`${API_BASE}/${tenantSlug}/chair/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ tokenNumber: nextCustomer.tokenNumber, chairNumber: freeChair.chairNumber })
+          });
+          freeChair.status = 'BUSY';
+          freeChair.currentToken = nextCustomer.tokenNumber;
+          freeChair.customerName = nextCustomer.customerName;
+          freeChair.services = nextCustomer.services;
+          queue.shift();
+          announceTurn(nextCustomer.tokenNumber, freeChair.chairNumber);
+        } catch (e) {}
+        isProcessingAutoDispatch = false;
+      }
+    }
+
+    function render() {
+      document.getElementById('chairsGrid').innerHTML = chairs.slice(0, totalChairsCount).map(c => `
+        <div class="border ${c.status === 'BUSY' ? 'border-amber-500/50 bg-amber-500/5 dark:bg-amber-950/20' : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900'} rounded-2xl p-4 transition-all">
+          <div class="flex justify-between items-center mb-2.5">
+            <span class="font-bold text-sm text-slate-900 dark:text-neutral-200">Chair #${c.chairNumber}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${c.status === 'BUSY' ? 'bg-amber-500 text-slate-950' : 'bg-slate-100 dark:bg-neutral-800 text-slate-500'}">${c.status}</span>
+          </div>
+          ${c.status === 'BUSY' ? `
+            <div class="bg-slate-50 dark:bg-neutral-950/80 p-3 rounded-xl border border-slate-200 dark:border-neutral-800 mb-3 text-xs">
+              <p class="text-slate-500 dark:text-neutral-400">Serving: <strong class="text-amber-500 text-base font-mono-num">#${c.currentToken}</strong> (${c.customerName || 'Guest'})</p>
+              <p class="text-[11px] text-slate-400 truncate mt-0.5">${Array.isArray(c.services) ? c.services.join(', ') : 'Service'} · <strong class="text-amber-400 font-mono">₹${c.amount || 150}</strong></p>
+            </div>
+            <button onclick="freeChair(${c.chairNumber})" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black py-2.5 rounded-xl">✓ Done (Add ₹${c.amount || 150} & Next)</button>
+          ` : `
+            <div class="py-4 text-center">
+              <span class="text-xs text-emerald-600 font-bold">● Ready</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">Will auto-fill from queue</p>
+            </div>
+          `}
+        </div>
+      `).join('');
+
+      document.getElementById('qCount').innerText = `${queue.length} Waiting`;
+      const qBox = document.getElementById('queueList');
+      if (!queue.length) {
+        qBox.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No guests waiting right now.</p>';
+        return;
+      }
+      qBox.innerHTML = queue.map((q, idx) => `
+        <div class="flex justify-between items-center bg-slate-50 dark:bg-neutral-950 border ${idx === 0 ? 'border-amber-500/50' : 'border-slate-200 dark:border-neutral-800'} p-3 rounded-xl">
+          <div class="flex items-center gap-3">
+            <span class="bg-amber-500/20 text-amber-600 dark:text-amber-300 font-black px-2.5 py-1 rounded-lg text-xs font-mono-num">#${q.tokenNumber}</span>
+            <div>
+              <span class="text-xs font-bold text-slate-900 dark:text-white">${q.customerName}</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">${Array.isArray(q.services) ? q.services.join(', ') : 'Service'} · <strong class="text-amber-400 font-mono">₹${q.totalPrice || 150}</strong></p>
+            </div>
+          </div>
+          <div class="text-xs font-mono-num font-semibold text-slate-500">#${idx + 1} in line</div>
+        </div>
+      `).join('');
+    }
+
+    async function freeChair(chairNumber) {
+      const token = getOwnerToken();
+      if (!token) return;
+      try {
+        await fetch(`${API_BASE}/${tenantSlug}/chair/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ chairNumber })
+        });
+      } catch (e) {}
+      fetchState();
+    }
+
+    initTheme();
+    initChairs();
+    renderServicesEditor();
+    checkAuthOnLoad();
+    setInterval(fetchState, 1500);
+  </script>
+</body>
+</html>

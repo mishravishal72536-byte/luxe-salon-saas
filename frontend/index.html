@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Smart Salon SaaS Launcher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b', dark: '#d97706', light: '#fbbf24' } } } }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-[#09090b] text-neutral-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-amber-500 selection:text-black">
+
+  <div class="w-full max-w-xl mx-auto my-auto py-8 text-center space-y-6">
+    <div class="inline-block bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-bold tracking-wider uppercase">
+      Multi-Tenant Salon SaaS
+    </div>
+
+    <div class="space-y-2">
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Smart Salon System</h1>
+      <p class="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto">Enter your salon name and security PIN below to launch your personal digital queue and counter system instantly.</p>
+    </div>
+
+    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-left space-y-4 max-w-md mx-auto">
+      <div>
+        <label class="text-xs font-bold text-neutral-300 block mb-1.5 uppercase tracking-wide">Salon Name</label>
+        <input id="shopNameInput" type="text" placeholder="e.g. Raju Nai" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 text-sm text-white focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none transition-all placeholder:text-neutral-600">
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-neutral-300 block mb-1.5 uppercase tracking-wide">Security PIN (Min 4 Digits)</label>
+        <input id="shopPinInput" type="password" maxlength="8" placeholder="e.g. 1234" class="w-full bg-neutral-950 border border-neutral-800 text-sm font-mono text-amber-400 tracking-widest focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none transition-all placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
+      </div>
+
+      <div class="text-[11px] text-neutral-500 font-mono pt-1">
+        System ID Slug: <span id="slugPreview" class="text-amber-400 font-bold">--</span>
+      </div>
+
+      <p id="launcherError" class="text-xs text-rose-400 font-semibold min-h-[16px]"></p>
+
+      <button onclick="launchSalon()" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-amber-400/10">
+        🚀 Launch My Salon System &rarr;
+      </button>
+    </div>
+  </div>
+
+  <footer class="w-full py-4 text-center text-xs text-neutral-500 border-t border-neutral-900 space-x-3">
+    <span>© 2026 Luxe Queue SaaS</span>
+    <span>•</span>
+    <a href="terms.html" class="hover:text-amber-400">Terms of Service</a>
+    <span>•</span>
+    <a href="privacy.html" class="hover:text-amber-400">Privacy Policy</a>
+  </footer>
+
+  <script>
+    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000')
+      ? 'http://localhost:5000/api'
+      : `${window.location.origin}/api`;
+
+    function updateSlug() {
+      const val = document.getElementById('shopNameInput').value.trim();
+      const slug = val ? val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : '--';
+      document.getElementById('slugPreview').innerText = slug;
+    }
+
+    async function launchSalon() {
+      const name = document.getElementById('shopNameInput').value.trim();
+      const pin = document.getElementById('shopPinInput').value.trim();
+      const errBox = document.getElementById('launcherError');
+      errBox.innerText = '';
+
+      if (!name) { errBox.innerText = 'Please enter your salon name.'; return; }
+      if (!pin || pin.length < 4) { errBox.innerText = 'Please enter a valid PIN (at least 4 digits).'; return; }
+
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      localStorage.setItem(`${slug}_shop_name`, name);
+
+      try {
+        let res = await fetch(`${API_BASE}/${slug}/auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode: pin })
+        });
+        let data = await res.json();
+
+        if (data.status === 'FIRST_TIME') {
+          const setRes = await fetch(`${API_BASE}/${slug}/auth/set-passcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newPasscode: pin })
+          });
+          const setData = await setRes.json();
+          if (setData.success && setData.token) {
+            sessionStorage.setItem(`${slug}_jwt_token`, setData.token);
+            window.location.href = `owner.html?salon=${slug}`;
+            return;
+          }
+        }
+
+        if (data.authenticated && data.token) {
+          sessionStorage.setItem(`${slug}_jwt_token`, data.token);
+          window.location.href = `owner.html?salon=${slug}`;
+        } else {
+          errBox.innerText = data.message || 'Incorrect PIN for this salon name.';
+        }
+      } catch (e) {
+        window.location.href = `owner.html?salon=${slug}`;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Admin Cockpit - Luxe Salon SaaS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b', dark: '#d97706', light: '#fbbf24' } } } }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+    .modal-enter { animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  </style>
+</head>
+<body class="bg-slate-950 text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+
+  <!-- Super Admin Auth Modal -->
+  <div id="adminAuthModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🛡️</div>
+      <div>
+        <h2 class="text-xl font-black text-white">Super Admin Access</h2>
+        <p class="text-xs text-neutral-400 mt-1">Enter Master Admin PIN.</p>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-3 text-left">
+        <div>
+          <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="Enter Master PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
+        </div>
+        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md">
+          Authenticate Cockpit ➔
+        </button>
+        <p id="adminLoginErr" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Master PIN Modal -->
+  <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 modal-enter">
+      <h3 class="text-sm font-extrabold text-amber-400 uppercase">Change Master Admin PIN</h3>
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="text-xs text-neutral-400 block mb-1">Current PIN</label>
+          <input id="currAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none">
+        </div>
+        <div>
+          <label class="text-xs text-neutral-400 block mb-1">New PIN (Min 4 digits)</label>
+          <input id="newAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none">
+        </div>
+      </div>
+      <p id="changeAdminPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px]"></p>
+      <div class="flex gap-2 pt-1">
+        <button onclick="document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2 text-xs bg-neutral-800 rounded-xl text-white">Cancel</button>
+        <button onclick="submitAdminPinChange()" class="flex-1 py-2 text-xs bg-amber-400 text-black font-bold rounded-xl">Save PIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Cockpit Container -->
+  <div class="max-w-6xl mx-auto w-full space-y-6">
+    <!-- Header -->
+    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-black text-amber-400 tracking-tight flex items-center gap-2">
+            <span>⚡</span> SUPER ADMIN PANEL
+          </h1>
+        </div>
+        <p class="text-xs text-neutral-400 mt-0.5">Secure Salon Days Tracker & Instant Halt Control</p>
+      </div>
+
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <button onclick="openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3.5 py-2 rounded-xl text-amber-400 font-semibold transition-all">
+          🔑 Change Admin PIN
+        </button>
+        <button onclick="fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3.5 py-2 rounded-xl text-neutral-300 font-semibold transition-all">
+          ↻ Refresh
+        </button>
+        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3.5 py-2 rounded-xl text-red-400 font-semibold transition-all">
+          Logout 🔒
+        </button>
+      </div>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
+        <div id="statTotalSalons" class="text-3xl font-black text-white font-mono-num mt-1">0</div>
+      </div>
+      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Active & Running</span>
+        <div id="statActiveSalons" class="text-3xl font-black text-emerald-400 font-mono-num mt-1">0</div>
+      </div>
+      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Halted / Frozen</span>
+        <div id="statHaltedSalons" class="text-3xl font-black text-red-400 font-mono-num mt-1">0</div>
+      </div>
+    </div>
+
+    <!-- Salons Table Section -->
+    <div class="bg-neutral-900/80 border border-neutral-800 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
+      <h2 class="text-sm font-bold text-neutral-300 uppercase tracking-wider">All Managed Salons</h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-neutral-800 text-[11px] text-neutral-400 uppercase tracking-wider">
+              <th class="py-3 px-3">Salon Name & Slug</th>
+              <th class="py-3 px-3">Onboard Date</th>
+              <th class="py-3 px-3">Running Since</th>
+              <th class="py-3 px-3">Status</th>
+              <th class="py-3 px-3 text-right">Admin Actions</th>
+            </tr>
+          </thead>
+          <tbody id="salonsTableBody" class="divide-y divide-neutral-800/60 text-xs">
+            <tr><td colspan="5" class="text-center py-8 text-neutral-500">Loading managed salons...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="w-full py-5 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6">
+    <span>🔒 End-to-End JWT & bcrypt Protected Cockpit • 2026</span>
+  </footer>
+
+  <script>
+    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000')
+      ? 'http://localhost:5000/api'
+      : `${window.location.origin}/api`;
+
+    function getAdminToken() {
+      return localStorage.getItem('luxe_super_admin_jwt');
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('adminMasterPinInput').value.trim();
+      const errBox = document.getElementById('adminLoginErr');
+      errBox.innerText = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+          localStorage.setItem('luxe_super_admin_jwt', data.token);
+          document.getElementById('adminAuthModal').classList.add('hidden');
+          fetchAllSalons();
+        } else {
+          errBox.innerText = data.error || 'Invalid Master PIN.';
+        }
+      } catch (e) {
+        errBox.innerText = 'Connection error.';
+      }
+    }
+
+    function adminLogout() {
+      localStorage.removeItem('luxe_super_admin_jwt');
+      document.getElementById('adminMasterPinInput').value = '';
+      document.getElementById('adminAuthModal').classList.remove('hidden');
+    }
+
+    function openChangeAdminPinModal() {
+      document.getElementById('currAdminPin').value = '';
+      document.getElementById('newAdminPin').value = '';
+      document.getElementById('changeAdminPinErrMsg').innerText = '';
+      document.getElementById('changeAdminPinModal').classList.remove('hidden');
+    }
+
+    async function submitAdminPinChange() {
+      const currentPin = document.getElementById('currAdminPin').value.trim();
+      const newPin = document.getElementById('newAdminPin').value.trim();
+      const errBox = document.getElementById('changeAdminPinErrMsg');
+      errBox.innerText = '';
+      const token = getAdminToken();
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/change-pin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ currentPin, newPin })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert('Master PIN updated successfully!');
+          document.getElementById('changeAdminPinModal').classList.add('hidden');
+        } else {
+          errBox.innerText = data.error || 'Failed to update PIN.';
+        }
+      } catch (e) {
+        errBox.innerText = 'Connection error.';
+      }
+    }
+
+    async function fetchAllSalons() {
+      const token = getAdminToken();
+      if (!token) {
+        document.getElementById('adminAuthModal').classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/salons`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 401 || res.status === 403) {
+          adminLogout();
+          return;
+        }
+        if (res.ok) {
+          const salons = await res.json();
+          renderSalonsTable(salons);
+        }
+      } catch (e) {
+        console.error('Error fetching salons:', e);
+      }
+    }
+
+    function renderSalonsTable(salons) {
+      let total = salons.length;
+      let halted = salons.filter(s => s.isHalted).length;
+      let active = total - halted;
+
+      document.getElementById('statTotalSalons').innerText = total;
+      document.getElementById('statActiveSalons').innerText = active;
+      document.getElementById('statHaltedSalons').innerText = halted;
+
+      const tbody = document.getElementById('salonsTableBody');
+      if (total === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-neutral-500">No salons onboarded yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = salons.map(s => `
+        <tr class="hover:bg-neutral-800/40 transition-all">
+          <td class="py-3.5 px-3">
+            <span class="font-bold text-white block uppercase">${s.shopName}</span>
+            <span class="text-[10px] text-amber-400 font-mono">salon=${s.slug}</span>
+          </td>
+          <td class="py-3.5 px-3 text-neutral-400 font-mono text-[11px]">
+            ${new Date(s.onboardedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </td>
+          <td class="py-3.5 px-3 text-emerald-400 font-bold font-mono-num">
+            ${s.daysOnboarded} Days
+          </td>
+          <td class="py-3.5 px-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
+              ${s.isHalted ? 'HALTED' : 'ACTIVE'}
+            </span>
+          </td>
+          <td class="py-3.5 px-3 text-right space-x-1.5">
+            <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all">
+              🔑 Reset PIN
+            </button>
+            <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30'} px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all">
+              ${s.isHalted ? 'Resume' : 'Halt'}
+            </button>
+            <a href="owner.html?salon=${s.slug}" target="_blank" class="inline-block bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all">
+              Studio ↗
+            </a>
+            <button onclick="deleteSalonPrompt('${s.slug}')" class="text-red-400 hover:text-red-300 p-1.5 rounded-lg text-xs" title="Delete Salon">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function toggleHaltSalon(slug) {
+      const token = getAdminToken();
+      try {
+        await fetch(`${API_BASE}/admin/toggle-halt`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ slug })
+        });
+        fetchAllSalons();
+      } catch (e) {}
+    }
+
+    async function resetSalonPinPrompt(slug) {
+      const newPasscode = prompt(`Enter new 4-digit PIN for salon (${slug}):`);
+      if (!newPasscode || newPasscode.length < 4) return;
+      const token = getAdminToken();
+      try {
+        const res = await fetch(`${API_BASE}/admin/reset-salon-pin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ slug, newPasscode })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) alert('Salon PIN reset successfully!');
+        else alert(data.error || 'Failed to reset.');
+      } catch (e) {}
+    }
+
+    async function deleteSalonPrompt(slug) {
+      if (!confirm(`Are you sure you want to delete salon '${slug}'? This action is irreversible.`)) return;
+      const token = getAdminToken();
+      try {
+        await fetch(`${API_BASE}/admin/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ slug })
+        });
+        fetchAllSalons();
+      } catch (e) {}
+    }
+
+    // Initialize check on load
+    if (getAdminToken()) {
+      document.getElementById('adminAuthModal').classList.add('hidden');
+      fetchAllSalons();
+    } else {
+      document.getElementById('adminAuthModal').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
