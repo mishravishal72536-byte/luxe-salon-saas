@@ -134,10 +134,8 @@
   </footer>
 
   <script>
-    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000')
-      ? 'http://localhost:5000/api'
-      : `${window.location.origin}/api`;
-
+    const API_BASE = "https://luxe-salon-saas.onrender.com/api";
+    
     function getAdminToken() {
       return localStorage.getItem('luxe_super_admin_jwt');
     }

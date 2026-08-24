@@ -133,10 +133,8 @@
   </footer>
 
   <script>
-    const API_BASE = (window.location.hostname === 'localhost' && window.location.port !== '5000')
-      ? 'http://localhost:5000/api'
-      : `${window.location.origin}/api`;
-
+    const API_BASE = "https://luxe-salon-saas.onrender.com/api";
+    
     const urlParams = new URLSearchParams(window.location.search);
     const tenantSlug = urlParams.get('salon') || 'demo-salon';
     let myTokenNumber = null, remainingSeconds = 0, timerRunning = false, alertSentForThisTurn = false;
