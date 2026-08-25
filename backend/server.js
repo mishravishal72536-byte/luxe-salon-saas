@@ -15,12 +15,10 @@ app.use(bodyParser.json());
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// --- ENVIRONMENT CONFIG & SECRETS ---
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/luxe_salon_saas';
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_change_in_production';
 
-// --- DATABASE CONNECTION (MongoDB) ---
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -30,19 +28,15 @@ mongoose.connect(MONGO_URI, {
   console.error('❌ MongoDB Connection Error:', err);
 });
 
-// --- MONGOOSE SCHEMAS & MODELS ---
-
-// Super Admin Schema (Secured with Hashed PIN)
 const adminSchema = new mongoose.Schema({
   masterPinHash: { type: String, required: true }
 });
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Salon / Tenant Schema
 const salonSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   shopName: { type: String, required: true },
-  passcodeHash: { type: String, default: '' }, // Hashed owner PIN
+  passcodeHash: { type: String, default: '' },
   isHalted: { type: Boolean, default: false },
   haltReason: { type: String, default: 'Salon access suspended by super admin.' },
   onboardedAt: { type: Date, default: Date.now },
@@ -72,7 +66,6 @@ const salonSchema = new mongoose.Schema({
 });
 const Salon = mongoose.model('Salon', salonSchema);
 
-// Initialize Default Super Admin if not exists (Default PIN: 8899)
 async function initAdmin() {
   const existingAdmin = await Admin.findOne();
   if (!existingAdmin) {
@@ -84,7 +77,6 @@ async function initAdmin() {
 }
 initAdmin();
 
-// --- JWT AUTH MIDDLEWARE ---
 function verifyAdminJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -97,21 +89,16 @@ function verifyAdminJWT(req, res, next) {
   });
 }
 
-// --- IP-BASED RATE LIMITER FOR BOOKING ---
 const bookingLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour window
-    max: 10, // Max tokens per IP address
+    windowMs: 60 * 60 * 1000,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-        res.status(429).json({ 
-            success: false, 
-            error: 'Aapne is network/IP se bohot saare tokens generate kar liye hain. Kripya thodi der baad koshish karein.' 
-        });
+        res.status(429).json({ success: false, error: 'Aapne is network/IP se bohot saare tokens generate kar liye hain.' });
     }
 });
 
-// --- SUPER ADMIN ENDPOINTS ---
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { pin } = req.body;
@@ -215,22 +202,13 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-// --- OWNER AUTH & SETUP ENDPOINTS ---
 app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
     let salon = await Salon.findOne({ slug });
 
     if (!salon) {
-      salon = await Salon.create({
-        slug: slug,
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
-        chairs: [
-          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
-        ]
-      });
+      return res.status(404).json({ status: 'DELETED', message: 'Server Disconnected: Salon has been deleted by Super Admin.' });
     }
 
     if (salon.isHalted) {
@@ -309,21 +287,12 @@ app.post('/api/:salon/auth/change-passcode', async (req, res) => {
   }
 });
 
-// --- SALON STATE & MANAGEMENT ENDPOINTS ---
 app.get('/api/:salon/state', async (req, res) => {
   try {
     const slug = req.params.salon;
     let salon = await Salon.findOne({ slug });
     if (!salon) {
-      salon = await Salon.create({
-        slug: slug,
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
-        chairs: [
-          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
-        ]
-      });
+      return res.status(404).json({ status: 'DELETED', message: 'Server Disconnected: Salon has been deleted by Super Admin.' });
     }
 
     if (salon.isHalted) {
@@ -347,11 +316,12 @@ app.post('/api/:salon/rename', async (req, res) => {
     const slug = req.params.salon;
     const { shopName } = req.body;
     const salon = await Salon.findOne({ slug });
-    if (salon && shopName) {
+    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    if (shopName) {
       salon.shopName = shopName;
       await salon.save();
     }
-    res.json({ success: true, shopName: salon ? salon.shopName : shopName });
+    res.json({ success: true, shopName: salon.shopName });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -361,27 +331,26 @@ app.post('/api/:salon/reset-day', async (req, res) => {
   try {
     const slug = req.params.salon;
     const salon = await Salon.findOne({ slug });
-    if (salon) {
-      salon.todayServed = 0;
-      salon.todayRevenue = 0;
-      salon.queue = [];
-      salon.chairs.forEach(c => {
-        c.status = 'FREE';
-        c.currentToken = null;
-        c.customerName = '';
-        c.services = [];
-        c.amount = 150;
-        c.remainingMinutes = 0;
-      });
-      await salon.save();
-    }
+    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    
+    salon.todayServed = 0;
+    salon.todayRevenue = 0;
+    salon.queue = [];
+    salon.chairs.forEach(c => {
+      c.status = 'FREE';
+      c.currentToken = null;
+      c.customerName = '';
+      c.services = [];
+      c.amount = 150;
+      c.remainingMinutes = 0;
+    });
+    await salon.save();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// --- CUSTOMER BOOKING & SMART ESTIMATOR ---
 app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
@@ -392,16 +361,8 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
     }
 
     let salon = await Salon.findOne({ slug });
-    if (!salon) {
-      salon = await Salon.create({
-        slug: slug,
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
-        chairs: [
-          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
-        ]
-      });
+    if (!salon || salon.isHalted) {
+      return res.status(403).json({ success: false, error: 'Server Disconnected: Salon is unavailable.' });
     }
 
     const durationMins = Number(totalDurationMinutes) || 20;
@@ -445,27 +406,25 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-// --- OWNER CHAIR CONTROLS ---
 app.post('/api/:salon/chair/start', async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
     const salon = await Salon.findOne({ slug });
+    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
 
-    if (salon) {
-      const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
-      const qIndex = salon.queue.findIndex(q => q.tokenNumber === Number(tokenNumber));
+    const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
+    const qIndex = salon.queue.findIndex(q => q.tokenNumber === Number(tokenNumber));
 
-      if (chair && qIndex !== -1) {
-        const customer = salon.queue.splice(qIndex, 1)[0];
-        chair.status = 'BUSY';
-        chair.currentToken = customer.tokenNumber;
-        chair.customerName = customer.customerName;
-        chair.services = customer.services;
-        chair.amount = customer.totalPrice || 150;
-        chair.remainingMinutes = customer.totalDurationMinutes || 20;
-        await salon.save();
-      }
+    if (chair && qIndex !== -1) {
+      const customer = salon.queue.splice(qIndex, 1)[0];
+      chair.status = 'BUSY';
+      chair.currentToken = customer.tokenNumber;
+      chair.customerName = customer.customerName;
+      chair.services = customer.services;
+      chair.amount = customer.totalPrice || 150;
+      chair.remainingMinutes = customer.totalDurationMinutes || 20;
+      await salon.save();
     }
     res.json({ success: true });
   } catch (err) {
@@ -478,31 +437,29 @@ app.post('/api/:salon/chair/complete', async (req, res) => {
     const slug = req.params.salon;
     const { chairNumber } = req.body;
     const salon = await Salon.findOne({ slug });
+    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
 
-    if (salon) {
-      const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
+    const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
+    if (chair && chair.status === 'BUSY') {
+      salon.todayServed += 1;
+      salon.todayRevenue += (chair.amount || 150);
 
-      if (chair && chair.status === 'BUSY') {
-        salon.todayServed += 1;
-        salon.todayRevenue += (chair.amount || 150);
-
-        if (salon.queue.length > 0) {
-          const nextCustomer = salon.queue.shift();
-          chair.currentToken = nextCustomer.tokenNumber;
-          chair.customerName = nextCustomer.customerName;
-          chair.services = nextCustomer.services;
-          chair.amount = nextCustomer.totalPrice || 150;
-          chair.remainingMinutes = nextCustomer.totalDurationMinutes || 20;
-        } else {
-          chair.status = 'FREE';
-          chair.currentToken = null;
-          chair.customerName = '';
-          chair.services = [];
-          chair.amount = 150;
-          chair.remainingMinutes = 0;
-        }
-        await salon.save();
+      if (salon.queue.length > 0) {
+        const nextCustomer = salon.queue.shift();
+        chair.currentToken = nextCustomer.tokenNumber;
+        chair.customerName = nextCustomer.customerName;
+        chair.services = nextCustomer.services;
+        chair.amount = nextCustomer.totalPrice || 150;
+        chair.remainingMinutes = nextCustomer.totalDurationMinutes || 20;
+      } else {
+        chair.status = 'FREE';
+        chair.currentToken = null;
+        chair.customerName = '';
+        chair.services = [];
+        chair.amount = 150;
+        chair.remainingMinutes = 0;
       }
+      await salon.save();
     }
     res.json({ success: true });
   } catch (err) {
