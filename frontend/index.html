@@ -19,34 +19,35 @@
 </head>
 <body class="bg-[#09090b] text-neutral-100 min-h-screen flex flex-col items-center justify-between p-4 selection:bg-amber-500 selection:text-black">
 
-  <div class="w-full max-w-xl mx-auto my-auto py-8 text-center space-y-6">
+  <!-- my-auto hata diya hai taaki content upar shift ho jaye -->
+  <div class="w-full max-w-xl mx-auto pt-4 sm:pt-10 pb-6 flex flex-col items-center justify-start space-y-4">
     <div class="inline-block bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-bold tracking-wider uppercase">
       Multi-Tenant Salon SaaS
     </div>
 
-    <div class="space-y-2">
+    <div class="space-y-1 text-center">
       <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Smart Salon System</h1>
       <p class="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto">Enter your salon name and security PIN below to launch your personal digital queue and counter system instantly.</p>
     </div>
 
-    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl text-left space-y-4 max-w-md mx-auto">
+    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-2xl text-left space-y-3 max-w-md w-full mx-auto">
       <div>
-        <label class="text-xs font-bold text-neutral-300 block mb-1.5 uppercase tracking-wide">Salon Name</label>
-        <input id="shopNameInput" type="text" placeholder="e.g. Raju Nai" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 text-sm text-white focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none transition-all placeholder:text-neutral-600">
+        <label class="text-xs font-bold text-neutral-300 block mb-1 uppercase tracking-wide">Salon Name</label>
+        <input id="shopNameInput" type="text" placeholder="e.g. Raju Nai" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 text-sm text-white focus:border-amber-400 rounded-xl px-4 py-2.5 focus:outline-none transition-all placeholder:text-neutral-600">
       </div>
 
       <div>
-        <label class="text-xs font-bold text-neutral-300 block mb-1.5 uppercase tracking-wide">Security PIN (Min 4 Digits)</label>
-        <input id="shopPinInput" type="password" maxlength="8" placeholder="e.g. 1234" class="w-full bg-neutral-950 border border-neutral-800 text-sm font-mono text-amber-400 tracking-widest focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none transition-all placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
+        <label class="text-xs font-bold text-neutral-300 block mb-1 uppercase tracking-wide">Security PIN (Min 4 Digits)</label>
+        <input id="shopPinInput" type="password" maxlength="8" placeholder="e.g. 1234" class="w-full bg-neutral-950 border border-neutral-800 text-sm font-mono text-amber-400 tracking-widest focus:border-amber-400 rounded-xl px-4 py-2.5 focus:outline-none transition-all placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
       </div>
 
-      <div class="text-[11px] text-neutral-500 font-mono pt-1">
+      <div class="text-[11px] text-neutral-500 font-mono pt-0.5">
         System ID Slug: <span id="slugPreview" class="text-amber-400 font-bold">--</span>
       </div>
 
-      <p id="launcherError" class="text-xs text-rose-400 font-semibold min-h-[16px]"></p>
+      <p id="launcherError" class="text-xs text-rose-400 font-semibold min-h-[14px]"></p>
 
-      <button onclick="launchSalon()" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3.5 rounded-xl transition-all shadow-lg shadow-amber-400/10">
+      <button onclick="launchSalon()" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-lg shadow-amber-400/10">
         🚀 Launch My Salon System &rarr;
       </button>
     </div>
