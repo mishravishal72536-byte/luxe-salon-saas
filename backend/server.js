@@ -207,8 +207,18 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
     const slug = req.params.salon;
     let salon = await Salon.findOne({ slug });
 
+    // Agar salon pehle se nahi hai, toh naya create kar do (First Time Setup)
     if (!salon) {
-      return res.status(404).json({ status: 'DELETED', message: 'Server Disconnected: Salon has been deleted by Super Admin.' });
+      salon = await Salon.create({
+        slug: slug,
+        shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        chairs: [
+          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
+        ]
+      });
+      return res.json({ status: 'FIRST_TIME' });
     }
 
     if (salon.isHalted) {
@@ -219,6 +229,10 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
     }
 
     const { passcode } = req.body;
+    if (!passcode) {
+      return res.json({ authenticated: false });
+    }
+
     const isMatch = await bcrypt.compare(passcode, salon.passcodeHash);
     if (isMatch) {
       return res.json({ authenticated: true, token: 'jwt_token_' + slug });
