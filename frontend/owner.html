@@ -103,7 +103,9 @@
           <p class="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-500">Live Counter & Dispatch Studio</p>
         </div>
 
+        <!-- Added Mobile Theme Toggle Button here -->
         <div class="flex sm:hidden items-center gap-1.5">
+          <button onclick="toggleTheme()" title="Toggle Theme" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🌙</button>
           <button onclick="openChangePinModal()" title="Change PIN" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🔑</button>
           <button onclick="lockStudio()" title="Lock Studio" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-xs flex items-center justify-center">🔒</button>
           <button onclick="fetchState()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-sm flex items-center justify-center">↻</button>
