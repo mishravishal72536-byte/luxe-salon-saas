@@ -28,6 +28,20 @@
 </head>
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
+  <!-- Server Disconnected / Terminated Popup Modal -->
+  <div id="disconnectedModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⚠️</div>
+      <div>
+        <h2 class="text-lg font-black text-white">Server Disconnected</h2>
+        <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
+      </div>
+      <button onclick="window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
+        Exit to Launcher
+      </button>
+    </div>
+  </div>
+
   <!-- Halt Modal Overlay -->
   <div id="haltScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
@@ -103,7 +117,6 @@
           <p class="text-[11px] sm:text-xs text-slate-500 dark:text-neutral-500">Live Counter & Dispatch Studio</p>
         </div>
 
-        <!-- Added Mobile Theme Toggle Button here -->
         <div class="flex sm:hidden items-center gap-1.5">
           <button onclick="toggleTheme()" title="Toggle Theme" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🌙</button>
           <button onclick="openChangePinModal()" title="Change PIN" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🔑</button>
@@ -303,6 +316,13 @@
         });
         const data = await res.json();
 
+        if (data.status === 'DELETED') {
+          document.getElementById('authScreen').classList.add('hidden');
+          document.getElementById('disconnectReasonMsg').innerText = data.message;
+          document.getElementById('disconnectedModal').classList.remove('hidden');
+          return;
+        }
+
         if (data.status === 'HALTED') {
           document.getElementById('authScreen').classList.add('hidden');
           document.getElementById('haltReasonMsg').innerText = data.message;
@@ -352,6 +372,13 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
+
+        if (data.status === 'DELETED') {
+          document.getElementById('authScreen').classList.add('hidden');
+          document.getElementById('disconnectReasonMsg').innerText = data.message;
+          document.getElementById('disconnectedModal').classList.remove('hidden');
+          return;
+        }
 
         if (res.ok && (data.success || data.authenticated || data.token || isFirstTimeSetup)) {
           const token = data.token || ('jwt_token_' + tenantSlug);
@@ -621,10 +648,19 @@
     }
 
     async function fetchState() {
+      if (!tenantSlug) return;
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
-        if (res.status === 403) {
-          document.getElementById('haltScreen').classList.remove('hidden');
+        if (res.status === 404 || res.status === 403) {
+          const data = await res.json();
+          if (res.status === 404) {
+            document.getElementById('disconnectReasonMsg').innerText = data.message || 'Server Disconnected: Salon has been deleted.';
+            document.getElementById('disconnectedModal').classList.remove('hidden');
+          } else if (res.status === 403 && data.status === 'HALTED') {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('haltReasonMsg').innerText = data.message;
+            document.getElementById('haltScreen').classList.remove('hidden');
+          }
           return;
         }
         if (res.ok) {
@@ -730,7 +766,7 @@
     initChairs();
     renderServicesEditor();
     checkAuthOnLoad();
-    setInterval(fetchState, 1500);
+    setInterval(fetchState, 2000);
   </script>
 </body>
 </html>
