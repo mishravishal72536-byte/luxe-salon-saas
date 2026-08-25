@@ -105,6 +105,21 @@
     </div>
   </div>
 
+  <!-- Custom Reset Day Confirmation Modal -->
+  <div id="resetDayModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4 text-center modal-enter">
+      <div class="w-12 h-12 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">↺</div>
+      <div>
+        <h3 class="text-sm font-extrabold text-white uppercase">Start a Fresh New Day?</h3>
+        <p class="text-xs text-neutral-400 mt-1">This will clear today's revenue, served count, and waiting queue.</p>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeResetDayModal()" class="flex-1 py-2 rounded-xl text-xs bg-slate-100 dark:bg-neutral-800 text-neutral-300 font-semibold">Cancel</button>
+        <button onclick="confirmResetDay()" class="flex-1 py-2 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-extrabold">Yes, Reset</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Owner App Container -->
   <div class="max-w-5xl mx-auto w-full space-y-4 sm:space-y-6">
     <div class="bg-white dark:bg-neutral-900/90 border border-slate-200 dark:border-neutral-800 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -632,18 +647,30 @@
       document.title = `${savedName} - Owner Control`;
     }
 
-    async function resetDayPrompt() {
-      if (confirm('Start a fresh new day?')) {
-        const token = getOwnerToken();
-        try {
-          const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, {
-            method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (res.ok) {
-            document.getElementById('statGuests').innerText = '0';
-            document.getElementById('statRevenue').innerText = '₹0';
-          }
-        } catch (e) {}
+    function resetDayPrompt() {
+      document.getElementById('resetDayModal').classList.remove('hidden');
+    }
+
+    function closeResetDayModal() {
+      document.getElementById('resetDayModal').classList.add('hidden');
+    }
+
+    async function confirmResetDay() {
+      closeResetDayModal();
+      const token = getOwnerToken();
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, {
+          method: 'POST', 
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          document.getElementById('statGuests').innerText = '0';
+          document.getElementById('statRevenue').innerText = '₹0';
+          fetchState();
+        }
+      } catch (e) {
+        alert('Connection error.');
       }
     }
 
