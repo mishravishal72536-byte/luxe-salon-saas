@@ -38,6 +38,7 @@ const salonSchema = new mongoose.Schema({
   shopName: { type: String, required: true },
   passcodeHash: { type: String, default: '' },
   isHalted: { type: Boolean, default: false },
+  isOnline: { type: Boolean, default: true }, // <--- Shop Online/Offline Flag Added
   haltReason: { type: String, default: 'Salon access suspended by super admin.' },
   onboardedAt: { type: Date, default: Date.now },
   todayServed: { type: Number, default: 0 },
@@ -202,16 +203,42 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
+// Toggle Shop Online / Offline API Route
+app.post('/api/:salon/toggle-online', async (req, res) => {
+  try {
+    const slug = req.params.salon;
+    let salon = await Salon.findOne({ slug });
+    if (!salon) {
+      salon = await Salon.create({
+        slug: slug,
+        shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        isOnline: true,
+        chairs: [
+          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
+        ]
+      });
+    } else {
+      salon.isOnline = !salon.isOnline;
+      await salon.save();
+    }
+    res.json({ success: true, isOnline: salon.isOnline });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
     let salon = await Salon.findOne({ slug });
 
-    // Agar salon pehle se nahi hai, toh naya create kar do (First Time Setup)
     if (!salon) {
       salon = await Salon.create({
         slug: slug,
         shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        isOnline: true,
         chairs: [
           { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
           { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
@@ -257,6 +284,7 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
       salon = new Salon({ 
         slug, 
         shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        isOnline: true,
         chairs: [
           { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
           { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
@@ -315,6 +343,7 @@ app.get('/api/:salon/state', async (req, res) => {
 
     res.json({
       shopName: salon.shopName,
+      isOnline: salon.isOnline,
       todayServed: salon.todayServed,
       todayRevenue: salon.todayRevenue,
       chairs: salon.chairs,
@@ -375,7 +404,20 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
     }
 
     let salon = await Salon.findOne({ slug });
-    if (!salon || salon.isHalted) {
+    if (!salon) {
+      salon = await Salon.create({
+        slug: slug,
+        shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        isOnline: true,
+        chairs: [
+          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
+          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
+        ]
+      });
+    }
+
+    if (salon.isHalted) {
       return res.status(403).json({ success: false, error: 'Server Disconnected: Salon is unavailable.' });
     }
 
@@ -393,7 +435,8 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       createdAt: new Date()
     };
 
-    const freeChair = salon.chairs.find(c => c.status === 'FREE');
+    // If shop is online, assign to free chair if available. If offline, register in queue.
+    const freeChair = salon.isOnline ? salon.chairs.find(c => c.status === 'FREE') : null;
     if (freeChair) {
       freeChair.status = 'BUSY';
       freeChair.currentToken = booking.tokenNumber;
@@ -458,7 +501,8 @@ app.post('/api/:salon/chair/complete', async (req, res) => {
       salon.todayServed += 1;
       salon.todayRevenue += (chair.amount || 150);
 
-      if (salon.queue.length > 0) {
+      // Only auto-fill from queue if shop is online
+      if (salon.isOnline && salon.queue.length > 0) {
         const nextCustomer = salon.queue.shift();
         chair.currentToken = nextCustomer.tokenNumber;
         chair.customerName = nextCustomer.customerName;

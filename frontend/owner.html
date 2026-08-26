@@ -148,15 +148,18 @@
         </div>
 
         <div class="flex sm:hidden items-center gap-1.5">
+          <button onclick="toggleShopOnlineStatus()" id="mobileShopOnlineToggleBtn" title="Shop Status" class="text-[11px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-2.5 py-1.5 rounded-xl">🟢 Online</button>
           <button onclick="toggleTheme()" title="Toggle Theme" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🌙</button>
-          <button onclick="openChangePinModal()" title="Change PIN" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-xs flex items-center justify-center">🔑</button>
           <button onclick="lockStudio()" title="Lock Studio" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-xs flex items-center justify-center">🔒</button>
-          <button onclick="fetchState()" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 text-sm flex items-center justify-center">↻</button>
         </div>
       </div>
 
       <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-between sm:justify-end">
         <div class="flex items-center gap-1.5 w-full sm:w-auto">
+          <!-- Shop Online / Offline Toggle Button -->
+          <button id="shopOnlineToggleBtn" onclick="toggleShopOnlineStatus()" class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5">
+            <span id="shopOnlineDot">🟢</span> <span id="shopOnlineText">Shop Online</span>
+          </button>
           <button onclick="openQRModal()" class="flex-1 sm:flex-none text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1">
             <span>📷</span> Print QR
           </button>
@@ -213,7 +216,7 @@
       <div class="flex justify-between items-center mb-3">
         <div>
           <h2 class="text-sm font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">Live Waiting Line</h2>
-          <p class="text-[11px] text-slate-500">Auto-moves to the next empty seat</p>
+          <p class="text-[11px] text-slate-500">Auto-moves to the next empty seat when Online</p>
         </div>
         <span id="qCount" class="text-xs bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2.5 py-1 rounded-full font-bold">0 Waiting</span>
       </div>
@@ -311,6 +314,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     let tenantSlug = urlParams.get('salon') || '';
     let isFirstTimeSetup = false;
+    let isShopOnline = true;
 
     function updateSlugPreview() {
       const nameVal = document.getElementById('authSalonNameInput').value.trim();
@@ -427,6 +431,46 @@
         }
       } catch (e) {
         errBox.innerText = 'Connection error.';
+      }
+    }
+
+    async function toggleShopOnlineStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/${tenantSlug}/toggle-online`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          isShopOnline = data.isOnline;
+          updateShopOnlineUI();
+        }
+      } catch (e) {
+        alert('Connection error.');
+      }
+    }
+
+    function updateShopOnlineUI() {
+      const btn = document.getElementById('shopOnlineToggleBtn');
+      const mobileBtn = document.getElementById('mobileShopOnlineToggleBtn');
+      if (isShopOnline) {
+        if (btn) {
+          btn.className = "text-xs bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5";
+          btn.innerHTML = '<span>🟢</span> <span>Shop Online</span>';
+        }
+        if (mobileBtn) {
+          mobileBtn.className = "text-[11px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-2.5 py-1.5 rounded-xl";
+          mobileBtn.innerText = "🟢 Online";
+        }
+      } else {
+        if (btn) {
+          btn.className = "text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5";
+          btn.innerHTML = '<span>🔴</span> <span>Shop Offline</span>';
+        }
+        if (mobileBtn) {
+          mobileBtn.className = "text-[11px] bg-red-500/10 border border-red-500/30 text-red-400 font-bold px-2.5 py-1.5 rounded-xl";
+          mobileBtn.innerText = "🔴 Offline";
+        }
       }
     }
 
@@ -723,6 +767,10 @@
         }
         if (res.ok) {
           const data = await res.json();
+          if (data.isOnline !== undefined) {
+            isShopOnline = data.isOnline;
+            updateShopOnlineUI();
+          }
           if (data.queue) queue = data.queue;
           if (data.chairs) {
             for (let i = 0; i < totalChairsCount; i++) {
@@ -735,12 +783,14 @@
         }
       } catch (e) {}
 
-      await checkAndAutoDispatch();
+      if (isShopOnline) {
+        await checkAndAutoDispatch();
+      }
       render();
     }
 
     async function checkAndAutoDispatch() {
-      if (isProcessingAutoDispatch || queue.length === 0) return;
+      if (isProcessingAutoDispatch || queue.length === 0 || !isShopOnline) return;
       const token = getOwnerToken();
       if (!token) return;
 
@@ -781,7 +831,7 @@
           ` : `
             <div class="py-4 text-center">
               <span class="text-xs text-emerald-600 font-bold">● Ready</span>
-              <p class="text-[11px] text-slate-400 mt-0.5">Will auto-fill from queue</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">${isShopOnline ? 'Will auto-fill from queue' : 'Shop is Offline'}</p>
             </div>
           `}
         </div>
