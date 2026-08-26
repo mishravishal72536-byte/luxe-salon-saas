@@ -38,7 +38,7 @@ const salonSchema = new mongoose.Schema({
   shopName: { type: String, required: true },
   passcodeHash: { type: String, default: '' },
   isHalted: { type: Boolean, default: false },
-  isOnline: { type: Boolean, default: true }, // <--- Shop Online/Offline Flag Added
+  isOnline: { type: Boolean, default: true },
   haltReason: { type: String, default: 'Salon access suspended by super admin.' },
   onboardedAt: { type: Date, default: Date.now },
   todayServed: { type: Number, default: 0 },
@@ -71,7 +71,9 @@ async function initAdmin() {
   const existingAdmin = await Admin.findOne();
   if (!existingAdmin) {
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash('8899', salt);
+    // Secure improvement: Read from environment variable with fallback
+    const defaultPin = process.env.DEFAULT_ADMIN_PIN || '8899';
+    const hash = await bcrypt.hash(defaultPin, salt);
     await Admin.create({ masterPinHash: hash });
     console.log('🛡️ Default Super Admin initialized with secure hash.');
   }
@@ -203,7 +205,6 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-// Toggle Shop Online / Offline API Route
 app.post('/api/:salon/toggle-online', async (req, res) => {
   try {
     const slug = req.params.salon;
@@ -435,7 +436,6 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       createdAt: new Date()
     };
 
-    // If shop is online, assign to free chair if available. If offline, register in queue.
     const freeChair = salon.isOnline ? salon.chairs.find(c => c.status === 'FREE') : null;
     if (freeChair) {
       freeChair.status = 'BUSY';
@@ -501,7 +501,6 @@ app.post('/api/:salon/chair/complete', async (req, res) => {
       salon.todayServed += 1;
       salon.todayRevenue += (chair.amount || 150);
 
-      // Only auto-fill from queue if shop is online
       if (salon.isOnline && salon.queue.length > 0) {
         const nextCustomer = salon.queue.shift();
         chair.currentToken = nextCustomer.tokenNumber;
