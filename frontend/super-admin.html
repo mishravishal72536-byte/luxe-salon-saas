@@ -145,15 +145,11 @@
   </div>
 
   <footer class="w-full py-4 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6">
-    <span>🔒 End-to-End JWT Protected Cockpit • 2026</span>
+    <span>🔒 Passcode Protected Cockpit • 2026</span>
   </footer>
 
   <script>
     const API_BASE = "https://luxe-salon-saas.onrender.com/api";
-    
-    function getAdminToken() {
-      return localStorage.getItem('luxe_super_admin_jwt');
-    }
 
     async function handleAdminLogin(e) {
       e.preventDefault();
@@ -168,8 +164,7 @@
           body: JSON.stringify({ pin })
         });
         const data = await res.json();
-        if (data.success && data.token) {
-          localStorage.setItem('luxe_super_admin_jwt', data.token);
+        if (data.success) {
           document.getElementById('adminAuthModal').classList.add('hidden');
           fetchAllSalons();
         } else {
@@ -181,7 +176,6 @@
     }
 
     function adminLogout() {
-      localStorage.removeItem('luxe_super_admin_jwt');
       document.getElementById('adminMasterPinInput').value = '';
       document.getElementById('adminAuthModal').classList.remove('hidden');
     }
@@ -198,12 +192,11 @@
       const newPin = document.getElementById('newAdminPin').value.trim();
       const errBox = document.getElementById('changeAdminPinErrMsg');
       errBox.innerText = '';
-      const token = getAdminToken();
 
       try {
         const res = await fetch(`${API_BASE}/admin/change-pin`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ currentPin, newPin })
         });
         const data = await res.json();
@@ -219,25 +212,18 @@
     }
 
     async function fetchAllSalons() {
-      const token = getAdminToken();
-      if (!token) {
-        document.getElementById('adminAuthModal').classList.remove('hidden');
-        return;
-      }
-
       try {
-        const res = await fetch(`${API_BASE}/admin/salons`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.status === 401 || res.status === 403) {
+        const res = await fetch(`${API_BASE}/admin/salons`);
+        if (!res.ok) {
           adminLogout();
           return;
         }
-        if (res.ok) {
-          const salons = await res.json();
-          renderSalonsTable(salons);
-        }
-      } catch (e) {}
+        const salons = await res.json();
+        document.getElementById('adminAuthModal').classList.add('hidden');
+        renderSalonsTable(salons);
+      } catch (e) {
+        adminLogout();
+      }
     }
 
     function renderSalonsTable(salons) {
@@ -287,11 +273,10 @@
     }
 
     async function toggleHaltSalon(slug) {
-      const token = getAdminToken();
       try {
         await fetch(`${API_BASE}/admin/toggle-halt`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug })
         });
         fetchAllSalons();
@@ -301,11 +286,10 @@
     async function resetSalonPinPrompt(slug) {
       const newPasscode = prompt(`Enter new 4-digit PIN for (${slug}):`);
       if (!newPasscode || newPasscode.length < 4) return;
-      const token = getAdminToken();
       try {
-        const res = await fetch(`${API_BASE}/admin/reset-salon-pin`, {
+        await fetch(`${API_BASE}/admin/reset-salon-pin`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug, newPasscode })
         });
         alert('PIN reset successfully!');
@@ -328,23 +312,18 @@
       closeDeleteSalonModal();
       if (!slug) return;
 
-      const token = getAdminToken();
       try {
         await fetch(`${API_BASE}/admin/delete`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ slug })
         });
         fetchAllSalons();
       } catch (e) {}
     }
 
-    if (getAdminToken()) {
-      document.getElementById('adminAuthModal').classList.add('hidden');
-      fetchAllSalons();
-    } else {
-      document.getElementById('adminAuthModal').classList.remove('hidden');
-    }
+    // On page load, keep auth modal active
+    document.getElementById('adminAuthModal').classList.remove('hidden');
   </script>
 </body>
 </html>

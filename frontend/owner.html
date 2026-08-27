@@ -28,30 +28,8 @@
 </head>
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
-  <div id="disconnectedModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
-      <div class="w-14 h-14 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⚠️</div>
-      <div>
-        <h2 class="text-lg font-black text-white">Server Disconnected</h2>
-        <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
-      </div>
-      <button onclick="window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
-        Exit to Launcher
-      </button>
-    </div>
-  </div>
-
-  <div id="haltScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
-      <div class="w-14 h-14 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⏸</div>
-      <div>
-        <h2 class="text-lg font-black text-white">Access Suspended</h2>
-        <p id="haltReasonMsg" class="text-xs text-neutral-400 mt-1">Your salon access has been halted by admin.</p>
-      </div>
-    </div>
-  </div>
-
-  <div id="authScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-40">
+  <!-- Strict Passcode Authentication Screen -->
+  <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-40">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
       <div class="w-12 h-12 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🔐</div>
       <div>
@@ -76,6 +54,29 @@
 
       <div class="border-t border-neutral-800/80 pt-3 text-[11px] text-neutral-500 font-mono text-center">
         Salon ID Slug: <span id="authTenantSlugBadge" class="text-amber-400 font-bold">demo-salon</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="disconnectedModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⚠️</div>
+      <div>
+        <h2 class="text-lg font-black text-white">Server Disconnected</h2>
+        <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
+      </div>
+      <button onclick="window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
+        Exit to Launcher
+      </button>
+    </div>
+  </div>
+
+  <div id="haltScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⏸</div>
+      <div>
+        <h2 class="text-lg font-black text-white">Access Suspended</h2>
+        <p id="haltReasonMsg" class="text-xs text-neutral-400 mt-1">Your salon access has been halted by admin.</p>
       </div>
     </div>
   </div>
@@ -313,24 +314,12 @@
       document.getElementById('authTenantSlugBadge').innerText = slug;
     }
 
-    function getOwnerToken() { 
-      return localStorage.getItem(`${tenantSlug}_jwt_token`); 
-    }
-
     async function checkAuthOnLoad() {
       if (!tenantSlug) {
         document.getElementById('authScreen').classList.remove('hidden');
         return;
       }
       document.getElementById('authTenantSlugBadge').innerText = tenantSlug;
-      const token = getOwnerToken();
-
-      if (token) {
-        document.getElementById('authScreen').classList.add('hidden');
-        initShopName();
-        fetchState();
-        return;
-      }
 
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
@@ -367,14 +356,10 @@
           document.getElementById('authActionBtn').innerText = 'Save PIN & Enter ➔';
           document.getElementById('authScreen').classList.remove('hidden');
         } else {
-          isFirstTimeSetup = false;
-          document.getElementById('authTitle').innerText = 'Owner Studio Login';
-          document.getElementById('authSubtitle').innerText = 'Enter your salon name and 4-digit PIN.';
-          document.getElementById('authActionBtn').innerText = 'Unlock Studio ➔';
+          // If already set up, keep lock screen active until passcode is entered
           document.getElementById('authScreen').classList.remove('hidden');
         }
       } catch (e) {
-        console.warn("Auth check error safely handled:", e);
         document.getElementById('authScreen').classList.remove('hidden');
       }
     }
@@ -401,7 +386,7 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) {
-          errBox.innerText = 'Server communication error.';
+          errBox.innerText = 'Incorrect PIN or Server error.';
           return;
         }
         const data = await res.json();
@@ -413,10 +398,7 @@
           return;
         }
 
-        if (res.ok && (data.success || data.authenticated || data.token)) {
-          if (data.token) {
-            localStorage.setItem(`${tenantSlug}_jwt_token`, data.token);
-          }
+        if (res.ok && (data.success || data.authenticated)) {
           document.getElementById('authScreen').classList.add('hidden');
           try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
 
@@ -426,7 +408,7 @@
           initShopName();
           fetchState();
         } else {
-          errBox.innerText = data.message || data.error || '❌ Incorrect PIN or Setup failed.';
+          errBox.innerText = data.error || '❌ Incorrect PIN.';
         }
       } catch (e) {
         errBox.innerText = 'Network connection failed.';
@@ -434,14 +416,10 @@
     }
 
     async function toggleShopOnlineStatus() {
-      const token = getOwnerToken();
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/toggle-online`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Content-Type': 'application/json' }
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -449,9 +427,7 @@
           isShopOnline = data.isOnline;
           updateShopOnlineUI();
         }
-      } catch (e) {
-        console.warn("Toggle online safely handled:", e);
-      }
+      } catch (e) {}
     }
 
     function updateShopOnlineUI() {
@@ -490,13 +466,11 @@
       const newPasscode = document.getElementById('newOwnerPin').value.trim();
       const errBox = document.getElementById('changePinErrMsg');
       errBox.innerText = '';
-      const token = getOwnerToken();
-      if (!token) { lockStudio(); return; }
 
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/auth/change-passcode`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ currentPasscode, newPasscode })
         });
         if (!res.ok) {
@@ -504,17 +478,15 @@
           return;
         }
         const data = await res.json();
-        if (data.success && data.token) {
-          localStorage.setItem(`${tenantSlug}_jwt_token`, data.token);
+        if (data.success) {
           alert('Studio PIN changed successfully!');
           document.getElementById('changePinModal').classList.add('hidden');
-        } else { errBox.innerText = data.message || 'Failed to change PIN.'; }
+        } else { errBox.innerText = data.error || 'Failed to change PIN.'; }
       } catch (e) { errBox.innerText = 'Connection error.'; }
     }
 
     function lockStudio() {
-      localStorage.removeItem(`${tenantSlug}_jwt_token`);
-      window.location.href = 'owner.html';
+      window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
     function initTheme() {
@@ -677,14 +649,13 @@
 
     async function saveShopNameModal() {
       const newName = document.getElementById('modalShopNameInput').value.trim();
-      const token = getOwnerToken();
-      if (newName && token) {
+      if (newName) {
         localStorage.setItem(`${tenantSlug}_shop_name`, newName);
         initShopName();
         try {
           await fetch(`${API_BASE}/${tenantSlug}/rename`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ shopName: newName })
           });
         } catch (e) {}
@@ -703,12 +674,8 @@
 
     async function confirmResetDay() {
       closeResetDayModal();
-      const token = getOwnerToken();
-      if (!token) return;
       try {
-        const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, {
-          method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, { method: 'POST' });
         if (res.ok) { fetchState(); }
       } catch (e) { alert('Connection error.'); }
     }
@@ -755,8 +722,6 @@
 
     async function checkAndAutoDispatch() {
       if (isProcessingAutoDispatch || queue.length === 0 || !isShopOnline) return;
-      const token = getOwnerToken();
-      if (!token) return;
 
       const freeChair = chairs.find(c => c.status === 'FREE');
       if (freeChair && queue.length > 0) {
@@ -765,7 +730,7 @@
         try {
           await fetch(`${API_BASE}/${tenantSlug}/chair/start`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tokenNumber: nextCustomer.tokenNumber, chairNumber: freeChair.chairNumber })
           });
           freeChair.status = 'BUSY';
@@ -822,12 +787,10 @@
     }
 
     async function freeChair(chairNumber) {
-      const token = getOwnerToken();
-      if (!token) return;
       try {
         await fetch(`${API_BASE}/${tenantSlug}/chair/complete`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chairNumber })
         });
       } catch (e) {}

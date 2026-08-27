@@ -294,7 +294,6 @@
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
         
-        // Handle Server Disconnected / Deleted Salon check (404)
         if (res.status === 404) {
           const errData = await res.json();
           document.getElementById('disconnectReasonMsg').innerText = errData.message || 'Server Disconnected: Salon has been deleted by Super Admin.';
@@ -397,7 +396,7 @@
         }
 
         if (remainingSeconds > 0) {
-          document.getElementById('myQueuePosTest').innerText = `You are #${myIndex + 1} in the waiting queue`;
+          document.getElementById('myQueuePosText').innerText = `You are #${myIndex + 1} in the waiting queue`;
         }
 
       } catch (e) {
