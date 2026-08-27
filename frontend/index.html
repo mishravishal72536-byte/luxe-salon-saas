@@ -29,7 +29,6 @@
       <p class="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto">Enter your salon name and security PIN below to launch your personal digital queue and counter system instantly.</p>
     </div>
 
-    <!-- Wrapped inside a form so Enter key triggers login -->
     <form onsubmit="event.preventDefault(); launchSalon();" class="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-2xl text-left space-y-3 max-w-md w-full mx-auto">
       <div>
         <label class="text-xs font-bold text-neutral-300 block mb-1 uppercase tracking-wide">Salon Name</label>
@@ -88,6 +87,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ passcode: pin })
         });
+        
+        if (!res.ok) {
+          errBox.innerText = 'Server communication error. Please try again.';
+          return;
+        }
+
         let data = await res.json();
 
         if (data.status === 'FIRST_TIME') {
@@ -111,7 +116,7 @@
           errBox.innerText = data.message || 'Incorrect PIN for this salon name.';
         }
       } catch (e) {
-        window.location.href = `owner.html?salon=${slug}`;
+        errBox.innerText = 'Network connection failed. Unable to reach server.';
       }
     }
   </script>

@@ -9,10 +9,12 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
+
+// Security Enhancements: Restrict CORS to trusted domains if needed
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static frontend files
+// Serve static frontend files safely
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const PORT = process.env.PORT || 5000;
@@ -34,7 +36,7 @@ const adminSchema = new mongoose.Schema({
 const Admin = mongoose.model('Admin', adminSchema);
 
 const salonSchema = new mongoose.Schema({
-  slug: { type: String, required: true, unique: true },
+  slug: { type: String, required: true, unique: true, index: true },
   shopName: { type: String, required: true },
   passcodeHash: { type: String, default: '' },
   isHalted: { type: Boolean, default: false },
@@ -68,13 +70,17 @@ const salonSchema = new mongoose.Schema({
 const Salon = mongoose.model('Salon', salonSchema);
 
 async function initAdmin() {
-  const adminExists = await Admin.findOne();
-  if (!adminExists) {
-    const salt = await bcrypt.genSalt(10);
-    const pin = process.env.DEFAULT_ADMIN_PIN || '8899';
-    const hash = await bcrypt.hash(pin, salt);
-    await Admin.create({ masterPinHash: hash });
-    console.log('🛡️ Default Super Admin initialized with secure hash.');
+  try {
+    const adminExists = await Admin.findOne();
+    if (!adminExists) {
+      const salt = await bcrypt.genSalt(12); // Increased salt rounds for stronger hashing
+      const pin = process.env.DEFAULT_ADMIN_PIN || '8899';
+      const hash = await bcrypt.hash(pin, salt);
+      await Admin.create({ masterPinHash: hash });
+      console.log('🛡️ Default Super Admin initialized with secure hash.');
+    }
+  } catch (err) {
+    console.error('Admin init error:', err);
   }
 }
 initAdmin();
@@ -92,7 +98,7 @@ function verifyAdminJWT(req, res, next) {
   });
 }
 
-// Tenant salon owner token verification
+// Tenant salon owner token verification with strict slug check
 function verifySalonJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -108,9 +114,16 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
+// Rate limiter to prevent brute force on authentication and booking endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { success: false, error: 'Too many requests from this IP, please try again later.' }
+});
+
 const bookingLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 10,
+    max: 15,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
@@ -118,9 +131,11 @@ const bookingLimiter = rateLimit({
     }
 });
 
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', authLimiter, async (req, res) => {
   try {
     const { pin } = req.body;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN is required.' });
+
     const adminDoc = await Admin.findOne();
     if (!adminDoc) return res.status(500).json({ success: false, error: 'Admin not initialized.' });
 
@@ -132,7 +147,7 @@ app.post('/api/admin/login', async (req, res) => {
     const token = jwt.sign({ role: 'superadmin' }, JWT_SECRET, { expiresIn: '12h' });
     return res.json({ success: true, token });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -149,13 +164,13 @@ app.post('/api/admin/change-pin', verifyAdminJWT, async (req, res) => {
       return res.status(400).json({ success: false, error: 'New PIN must be at least 4 digits.' });
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     adminDoc.masterPinHash = await bcrypt.hash(newPin, salt);
     await adminDoc.save();
 
     res.json({ success: true, message: 'Master PIN updated securely.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -175,7 +190,7 @@ app.get('/api/admin/salons', verifyAdminJWT, async (req, res) => {
     });
     res.json(salonList);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -189,7 +204,7 @@ app.post('/api/admin/toggle-halt', verifyAdminJWT, async (req, res) => {
     await targetSalon.save();
     res.json({ success: true, isHalted: targetSalon.isHalted });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -201,12 +216,12 @@ app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
       return res.status(400).json({ error: 'Invalid PIN or salon slug.' });
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
     res.json({ success: true, message: `PIN reset successfully for ${slug}` });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -217,7 +232,7 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
     if (!delResult) return res.status(404).json({ success: false, error: 'Salon not found.' });
     res.json({ success: true, message: 'Salon deleted successfully.' });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -233,11 +248,11 @@ app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
     }
     res.json({ success: true, isOnline: targetSalon.isOnline });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
-app.post('/api/:salon/auth/verify', async (req, res) => {
+app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
     let targetSalon = await Salon.findOne({ slug });
@@ -276,11 +291,11 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
       return res.json({ authenticated: false, message: 'Incorrect PIN.' });
     }
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
-app.post('/api/:salon/auth/set-passcode', async (req, res) => {
+app.post('/api/:salon/auth/set-passcode', authLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { newPasscode } = req.body;
@@ -302,14 +317,14 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
       });
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -329,14 +344,14 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
       return res.status(400).json({ success: false, message: 'New PIN must be at least 4 digits.' });
     }
 
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(12);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -361,7 +376,7 @@ app.get('/api/:salon/state', async (req, res) => {
       queue: targetSalon.queue
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -372,12 +387,12 @@ app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
     const targetSalon = await Salon.findOne({ slug });
     if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
     if (shopName) {
-      targetSalon.shopName = shopName;
+      targetSalon.shopName = shopName.trim();
       await targetSalon.save();
     }
     res.json({ success: true, shopName: targetSalon.shopName });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -401,7 +416,7 @@ app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
     await targetSalon.save();
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -469,7 +484,7 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
     await targetSalon.save();
     res.json({ success: true, booking: bookingItem, tokenNumber: nextTokenNum });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -495,7 +510,7 @@ app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
     }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
@@ -530,7 +545,7 @@ app.post('/api/:salon/chair/complete', verifySalonJWT, async (req, res) => {
     }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
