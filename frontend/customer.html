@@ -199,7 +199,7 @@
       }
       let alertDiv = document.getElementById('floatingAlertBanner') || document.createElement('div');
       alertDiv.id = 'floatingAlertBanner';
-      alertDiv.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl shadow-2xl z-50 font-bold text-center border border-amber-300 max-w-sm w-full mx-4 modal-enter';
+      alertDiv.className = 'fixed top-4 inset-x-4 max-w-sm mx-auto bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl shadow-2xl z-50 font-bold text-center border border-amber-300 modal-enter';
       alertDiv.innerHTML = `<div class="text-sm font-black">${title}</div><div class="text-xs mt-0.5">${body}</div><button onclick="this.parentElement.remove()" class="text-[10px] bg-slate-950 text-amber-400 px-3 py-1 rounded-lg mt-2 uppercase">Dismiss ✕</button>`;
       if (!document.getElementById('floatingAlertBanner')) document.body.appendChild(alertDiv);
       try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e=>{}); } catch(e){}

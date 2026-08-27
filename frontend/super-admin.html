@@ -22,7 +22,7 @@
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
   <!-- Super Admin Auth Modal -->
-  <div id="adminAuthModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-50 overflow-y-auto">
+  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-50 overflow-y-auto">
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl modal-enter my-8">
       <div class="w-14 h-14 bg-amber-500/15 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto text-2xl">🛡️</div>
       <div>
@@ -232,9 +232,7 @@
         const salons = await res.json();
         document.getElementById('adminAuthModal').classList.add('hidden');
         renderSalonsTable(salons);
-      } catch (e) {
-        // Keep cockpit open or handle network gracefully
-      }
+      } catch (e) {}
     }
 
     function renderSalonsTable(salons) {
@@ -333,7 +331,6 @@
       } catch (e) {}
     }
 
-    // Check auth on load
     if (getAdminToken()) {
       document.getElementById('adminAuthModal').classList.add('hidden');
       fetchAllSalons();

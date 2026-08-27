@@ -28,7 +28,7 @@
 </head>
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
-  <!-- Sign In / Authentication Screen (Aligned to top / safe for mobile keyboard) -->
+  <!-- Sign In / Authentication Screen -->
   <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-40 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter mb-8">
       <div class="w-12 h-12 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🔐</div>
@@ -321,6 +321,22 @@
       }
       document.getElementById('authTenantSlugBadge').innerText = tenantSlug;
 
+      // Smart Session Check: Skip PIN screen if already logged in and not explicitly locked on this device
+      const sessionActive = localStorage.getItem(`${tenantSlug}_owner_session`);
+      const isLocked = localStorage.getItem(`${tenantSlug}_is_locked`) === 'true';
+
+      if (sessionActive && !isLocked) {
+        try {
+          const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
+          if (res.ok) {
+            document.getElementById('authScreen').classList.add('hidden');
+            initShopName();
+            fetchState();
+            return;
+          }
+        } catch (e) {}
+      }
+
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
           method: 'POST',
@@ -354,10 +370,8 @@
           document.getElementById('authTitle').innerText = 'Owner Studio Sign In';
           document.getElementById('authSubtitle').innerText = 'Enter your salon name and security PIN to access your dashboard.';
           document.getElementById('authActionBtn').innerText = 'Sign In to Dashboard ➔';
-          document.getElementById('authScreen').classList.remove('hidden');
-        } else {
-          document.getElementById('authScreen').classList.remove('hidden');
         }
+        document.getElementById('authScreen').classList.remove('hidden');
       } catch (e) {
         document.getElementById('authScreen').classList.remove('hidden');
       }
@@ -375,43 +389,52 @@
       tenantSlug = salonName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       localStorage.setItem(`${tenantSlug}_shop_name`, salonName);
 
-      let endpoint = isFirstTimeSetup ? `${API_BASE}/${tenantSlug}/auth/set-passcode` : `${API_BASE}/${tenantSlug}/auth/verify`;
-      let payload = isFirstTimeSetup ? { newPasscode: pin } : { passcode: pin };
-
       try {
-        const res = await fetch(endpoint, {
+        let res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ passcode: pin })
         });
-        if (!res.ok) {
-          errBox.innerText = 'Incorrect PIN or Server error.';
-          return;
-        }
-        const data = await res.json();
+        let data = await res.json();
 
-        if (data.status === 'DELETED') {
-          document.getElementById('authScreen').classList.add('hidden');
-          document.getElementById('disconnectReasonMsg').innerText = data.message;
-          document.getElementById('disconnectedModal').classList.remove('hidden');
-          return;
-        }
-
-        if (res.ok && (data.success || data.authenticated)) {
-          document.getElementById('authScreen').classList.add('hidden');
-          try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
-
-          const newUrl = `${window.location.pathname}?salon=${tenantSlug}`;
-          window.history.replaceState({}, '', newUrl);
-
-          initShopName();
-          fetchState();
-        } else {
+        if (data.status === 'FIRST_TIME') {
+          let setRes = await fetch(`${API_BASE}/${tenantSlug}/auth/set-passcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newPasscode: pin, shopName: salonName })
+          });
+          let setData = await setRes.json();
+          if (!setData.success) {
+            errBox.innerText = setData.error || 'Failed to initialize salon.';
+            return;
+          }
+        } else if (!res.ok || (!data.success && !data.authenticated)) {
           errBox.innerText = data.error || '❌ Incorrect PIN.';
+          return;
         }
+
+        // Set active session and clear lock flag
+        localStorage.setItem(`${tenantSlug}_owner_session`, 'true');
+        localStorage.removeItem(`${tenantSlug}_is_locked`);
+
+        document.getElementById('authScreen').classList.add('hidden');
+        try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
+
+        const newUrl = `${window.location.pathname}?salon=${tenantSlug}`;
+        window.history.replaceState({}, '', newUrl);
+
+        initShopName();
+        fetchState();
+
       } catch (e) {
         errBox.innerText = 'Network connection failed.';
       }
+    }
+
+    function lockStudio() {
+      localStorage.setItem(`${tenantSlug}_is_locked`, 'true');
+      localStorage.removeItem(`${tenantSlug}_owner_session`);
+      window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
     async function toggleShopOnlineStatus() {
@@ -482,10 +505,6 @@
           document.getElementById('changePinModal').classList.add('hidden');
         } else { errBox.innerText = data.error || 'Failed to change PIN.'; }
       } catch (e) { errBox.innerText = 'Connection error.'; }
-    }
-
-    function lockStudio() {
-      window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
     function initTheme() {

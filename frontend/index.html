@@ -20,9 +20,10 @@
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
-<body class="bg-slate-950 text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+<body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
 
-  <div class="max-w-md mx-auto w-full my-auto space-y-6 pt-4 sm:pt-0">
+  <!-- Launcher / Register Screen (Pure Black & Top Aligned) -->
+  <div class="max-w-md mx-auto w-full my-auto space-y-6 pt-6 sm:pt-12">
     <div class="text-center space-y-2">
       <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
         Multi-Tenant Salon SaaS
@@ -33,6 +34,7 @@
       </p>
     </div>
 
+    <!-- Register / Launch Card -->
     <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 modal-enter">
       <form onsubmit="handleLaunch(event)" class="space-y-4">
         <div>
@@ -56,7 +58,7 @@
       </form>
     </div>
 
-    <div class="text-center">
+    <div class="text-center pb-4">
       <a href="super-admin.html" class="text-xs text-neutral-500 hover:text-amber-400 font-semibold transition-all">
         🛡️ Access Super Admin Cockpit
       </a>
@@ -107,8 +109,8 @@
             errBox.innerText = setData.error || 'Failed to register salon.';
             return;
           }
-        } else if (res.status === 401) {
-          errBox.innerText = 'Incorrect PIN for existing salon.';
+        } else if (!res.ok && res.status !== 200) {
+          errBox.innerText = data.error || 'Incorrect PIN for existing salon.';
           return;
         }
 
