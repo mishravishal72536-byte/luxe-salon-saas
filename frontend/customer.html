@@ -13,6 +13,8 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .font-stopwatch { font-family: 'JetBrains Mono', monospace; }
+    .modal-enter { animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     .custom-scroll {
       scrollbar-width: thin;
       scrollbar-color: #f59e0b #18181b;
@@ -24,6 +26,20 @@
   </style>
 </head>
 <body class="bg-slate-100 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 flex flex-col items-center justify-between transition-colors duration-200">
+
+  <!-- Server Disconnected Modal -->
+  <div id="disconnectedModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-14 h-14 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-3xl">⚠️</div>
+      <div>
+        <h2 class="text-lg font-black text-white">Server Disconnected</h2>
+        <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
+      </div>
+      <button onclick="window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
+        Exit to Launcher
+      </button>
+    </div>
+  </div>
 
   <div id="haltScreen" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
@@ -222,6 +238,11 @@
         const secs = String(remainingSeconds % 60).padStart(2, '0');
         document.getElementById('timerMinutes').innerText = mins;
         document.getElementById('timerSeconds').innerText = secs;
+
+        if (remainingSeconds === 0) {
+          timerRunning = false;
+          document.getElementById('myQueuePosText').innerText = "⚠️ Sorry for making you wait a little longer! Your turn is arriving shortly.";
+        }
       }
     }, 1000);
 
@@ -243,6 +264,7 @@
       if (!services.length) { services = ['Haircut']; totalMins = 20; totalPrice = 150; }
 
       document.getElementById('bookingForm').classList.add('hidden');
+      document.getElementById('shopClosedBanner').classList.add('hidden');
       document.getElementById('myTokenCard').classList.remove('hidden');
 
       try {
@@ -271,10 +293,21 @@
     async function checkMyPosition() {
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
+        
+        // Handle Server Disconnected / Deleted Salon check (404)
+        if (res.status === 404) {
+          const errData = await res.json();
+          document.getElementById('disconnectReasonMsg').innerText = errData.message || 'Server Disconnected: Salon has been deleted by Super Admin.';
+          document.getElementById('disconnectedModal').classList.remove('hidden');
+          return;
+        }
+
         if (res.status === 403) {
           const errData = await res.json();
-          document.getElementById('haltReasonMsg').innerText = errData.message || 'Salon access suspended.';
-          document.getElementById('haltScreen').classList.remove('hidden');
+          if (errData.status === 'HALTED') {
+            document.getElementById('haltReasonMsg').innerText = errData.message || 'Salon access suspended.';
+            document.getElementById('haltScreen').classList.remove('hidden');
+          }
           return;
         }
         document.getElementById('haltScreen').classList.add('hidden');
@@ -300,7 +333,6 @@
         }
         wasPreviouslyOffline = !isOnline;
 
-        // Handle Shop Offline UI State (Hide booking form, show "Shop is Closed" banner)
         if (!isOnline) {
           timerRunning = false;
           timerWrapper.classList.add('hidden');
@@ -310,7 +342,6 @@
           syncBadge.className = "text-[10px] bg-red-500/10 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-bold";
           syncBadge.innerText = "● Shop Offline";
 
-          // Hide booking form if customer hasn't generated a token yet
           if (!myTokenNumber) {
             bookingForm.classList.add('hidden');
             shopClosedBanner.classList.remove('hidden');
@@ -326,7 +357,6 @@
             timerRunning = true;
           }
 
-          // Show booking form when shop is online
           if (!myTokenNumber) {
             shopClosedBanner.classList.add('hidden');
             bookingForm.classList.remove('hidden');
@@ -366,7 +396,9 @@
           triggerAlert("🔔 Get Ready!", "You are next in line. Please be prepared!");
         }
 
-        document.getElementById('myQueuePosText').innerText = `You are #${myIndex + 1} in the waiting queue`;
+        if (remainingSeconds > 0) {
+          document.getElementById('myQueuePosTest').innerText = `You are #${myIndex + 1} in the waiting queue`;
+        }
 
       } catch (e) {
         console.warn("Polling state error safely handled:", e);
@@ -377,6 +409,7 @@
       myTokenNumber = null; timerRunning = false; alertSentForThisTrust = null;
       document.getElementById('cName').value = '';
       document.getElementById('myTokenCard').classList.add('hidden');
+      document.getElementById('shopClosedBanner').classList.add('hidden');
       document.getElementById('bookingForm').classList.remove('hidden');
       renderCatalog();
     }
@@ -413,7 +446,7 @@
         return;
       }
 
-      const saved = localStorage.getItem(`${tenantSlug}_reviews` ) || '[]';
+      const saved = localStorage.getItem(`${tenantSlug}_reviews`) || '[]';
       const reviews = JSON.parse(saved);
       
       reviews.unshift({

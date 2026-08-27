@@ -64,6 +64,22 @@
     </div>
   </div>
 
+  <!-- Custom Delete Confirmation Modal -->
+  <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-12 h-12 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">🗑️</div>
+      <div>
+        <h3 class="text-sm font-extrabold text-white uppercase">Delete Salon?</h3>
+        <p id="deleteSalonMsg" class="text-xs text-neutral-400 mt-1">This will disconnect the server and terminate all sessions.</p>
+      </div>
+      <input type="hidden" id="pendingDeleteSlug" value="">
+      <div class="flex gap-2 pt-1">
+        <button onclick="closeDeleteSalonModal()" class="flex-1 py-2 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-semibold">Cancel</button>
+        <button onclick="confirmDeleteSalon()" class="flex-1 py-2 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-extrabold">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Cockpit Container -->
   <div class="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">
     <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -263,7 +279,7 @@
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
               <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 text-neutral-300 px-2 py-1 rounded text-[10px]">Studio ↗</a>
-              <button onclick="deleteSalonPrompt('${s.slug}')" class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-[10px]" title="Delete">🗑️</button>
+              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-[10px]" title="Delete">🗑️</button>
             </div>
           </td>
         </tr>
@@ -290,14 +306,28 @@
         const res = await fetch(`${API_BASE}/admin/reset-salon-pin`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.xml ? {} : JSON.stringify({ slug, newPasscode })
+          body: JSON.stringify({ slug, newPasscode })
         });
         alert('PIN reset successfully!');
       } catch (e) {}
     }
 
-    async function deleteSalonPrompt(slug) {
-      if (!confirm(`Delete salon '${slug}'? This will disconnect the server and terminate all sessions.`)) return;
+    function deleteSalonPrompt(slug, shopName) {
+      document.getElementById('pendingDeleteSlug').value = slug;
+      document.getElementById('deleteSalonMsg').innerText = `Delete salon '${shopName}'? This will disconnect the server and terminate all sessions.`;
+      document.getElementById('deleteSalonModal').classList.remove('hidden');
+    }
+
+    function closeDeleteSalonModal() {
+      document.getElementById('pendingDeleteSlug').value = '';
+      document.getElementById('deleteSalonModal').classList.add('hidden');
+    }
+
+    async function confirmDeleteSalon() {
+      const slug = document.getElementById('pendingDeleteSlug').value;
+      closeDeleteSalonModal();
+      if (!slug) return;
+
       const token = getAdminToken();
       try {
         await fetch(`${API_BASE}/admin/delete`, {
