@@ -2,43 +2,39 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Privacy Policy - Luxe Queue SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b' } } } } }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-6 sm:p-12 flex flex-col justify-between">
-  <div class="max-w-3xl mx-auto w-full space-y-6">
-    <a href="index.html" class="text-xs text-amber-400 font-bold hover:underline">← Back to App</a>
-    
-    <div class="space-y-2">
-      <h1 class="text-2xl sm:text-3xl font-black text-white uppercase">Privacy Policy</h1>
-      <p class="text-xs text-neutral-400">Effective Date: August 24, 2026</p>
+<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-4 sm:p-8 flex flex-col justify-between">
+  <div class="max-w-2xl mx-auto w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+    <div class="flex justify-between items-center border-b border-slate-200 dark:border-neutral-800 pb-4">
+      <h1 class="text-xl font-black text-amber-500 uppercase tracking-tight">Privacy Policy</h1>
+      <a href="index.html" class="text-xs bg-slate-100 dark:bg-neutral-800 px-3 py-1.5 rounded-xl text-slate-700 dark:text-neutral-300 font-semibold">← Home</a>
     </div>
-
-    <div class="space-y-4 text-xs sm:text-sm text-neutral-300 leading-relaxed">
-      <p>Welcome to Luxe Queue SaaS. We respect your privacy and are committed to protecting any minimal information processed through our digital queue management system.</p>
+    
+    <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
+      <p>At <strong>Luxe Queue SaaS</strong>, we respect your privacy and are committed to protecting the data processed through our live queue and counter management system.</p>
       
-      <h3 class="text-sm font-bold text-amber-400 uppercase pt-2">1. Information We Collect</h3>
-      <p>To provide queue tracking and salon management services, we process temporary details such as customer names, selected service preferences, feedback reviews, and basic salon operational data. We do <strong>not</strong> collect or store sensitive financial records, credit card numbers, or government identification documents.</p>
-
-      <h3 class="text-sm font-bold text-amber-400 uppercase pt-2">2. How We Use Information</h3>
-      <p>The information collected is strictly utilized to generate active digital queue passes, estimate waiting times, display customer reviews on local dashboards, and enable salon owners to manage daily operational flow.</p>
-
-      <h3 class="text-sm font-bold text-amber-400 uppercase pt-2">3. Data Security & Storage</h3>
-      <p>We implement industry-standard security measures (such as PIN authentication and token-based validation) to safeguard your workflow. However, no digital transmission over the internet is 100% secure.</p>
-
-      <h3 class="text-sm font-bold text-amber-400 uppercase pt-2">4. Third-Party Sharing</h3>
-      <p>We do not sell, trade, or transfer your personal data to outside entities. All data remains strictly confined to the respective salon's operational scope.</p>
-
-      <h3 class="text-sm font-bold text-amber-400 uppercase pt-2">5. Contact Us</h3>
-      <p>If you have any questions regarding this Privacy Policy, you may contact the system administrator.</p>
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase pt-2">1. Information We Collect</h2>
+      <p>We collect minimal information necessary to operate the queue, including customer names provided during token generation, selected service catalogs, customer feedback/reviews, and salon operational metrics (revenue and served counts).</p>
+      
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase pt-2">2. How We Use Your Data</h2>
+      <p>Collected data is used strictly for real-time queue synchronization, estimated wait-time calculations, browser notification alerts when your turn arrives, and salon performance analytics visible to authorized salon owners.</p>
+      
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase pt-2">3. Data Security & Storage</h2>
+      <p>All authentication PINs, live queue states, and customer check-ins are securely handled. We implement robust multi-tenant isolation so that data remains strictly partitioned between different registered salons.</p>
+      
+      <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase pt-2">4. Cookies & Local Storage</h2>
+      <p>We use local browser storage and session cookies to maintain theme preferences, active token passes, and owner login states for seamless user experience.</p>
     </div>
   </div>
-
-  <footer class="max-w-3xl mx-auto w-full py-6 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-10">
-    <span>© 2026 Luxe Queue SaaS. All rights reserved.</span>
-  </footer>
+  
+  <footer class="text-center text-xs text-slate-400 dark:text-neutral-500 py-4">© 2026 Luxe Queue SaaS • All Rights Reserved</footer>
 </body>
 </html>

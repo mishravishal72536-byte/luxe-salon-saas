@@ -19,62 +19,62 @@
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
-<body class="bg-slate-950 text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between">
+<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
   <!-- Super Admin Auth Modal -->
-  <div id="adminAuthModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl modal-enter">
-      <div class="w-14 h-14 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🛡️</div>
+  <div id="adminAuthModal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-50 overflow-y-auto">
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl modal-enter my-8">
+      <div class="w-14 h-14 bg-amber-500/15 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto text-2xl">🛡️</div>
       <div>
-        <h2 class="text-xl font-black text-white">Super Admin Access</h2>
-        <p class="text-xs text-neutral-400 mt-1">Enter Master Admin PIN.</p>
+        <h2 class="text-xl font-black text-slate-900 dark:text-white">Super Admin Access</h2>
+        <p class="text-xs text-slate-500 dark:text-neutral-400 mt-1">Enter Master Admin PIN.</p>
       </div>
 
       <form onsubmit="handleAdminLogin(event)" class="space-y-3 text-left">
         <div>
-          <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="Enter Master PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
+          <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="Enter Master PIN" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-500 dark:text-amber-400 focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-500" required>
         </div>
-        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md">
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md cursor-pointer">
           Authenticate Cockpit ➔
         </button>
-        <p id="adminLoginErr" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
+        <p id="adminLoginErr" class="text-xs text-red-500 font-semibold min-h-[16px] text-center"></p>
       </form>
     </div>
   </div>
 
   <!-- Change Master PIN Modal -->
   <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 modal-enter">
-      <h3 class="text-sm font-extrabold text-amber-400 uppercase">Change Master Admin PIN</h3>
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 modal-enter">
+      <h3 class="text-sm font-extrabold text-amber-500 uppercase">Change Master Admin PIN</h3>
       <div class="space-y-3 text-left">
         <div>
-          <label class="text-xs text-neutral-400 block mb-1">Current PIN</label>
-          <input id="currAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none">
+          <label class="text-xs text-slate-500 dark:text-neutral-400 block mb-1">Current PIN</label>
+          <input id="currAdminPin" type="password" maxlength="12" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white font-mono focus:outline-none">
         </div>
         <div>
-          <label class="text-xs text-neutral-400 block mb-1">New PIN (Min 4 digits)</label>
-          <input id="newAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white font-mono focus:outline-none">
+          <label class="text-xs text-slate-500 dark:text-neutral-400 block mb-1">New PIN (Min 4 digits)</label>
+          <input id="newAdminPin" type="password" maxlength="12" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white font-mono focus:outline-none">
         </div>
       </div>
-      <p id="changeAdminPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px]"></p>
+      <p id="changeAdminPinErrMsg" class="text-xs text-red-500 font-semibold min-h-[14px]"></p>
       <div class="flex gap-2 pt-1">
-        <button onclick="document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2 text-xs bg-neutral-800 rounded-xl text-white">Cancel</button>
-        <button onclick="submitAdminPinChange()" class="flex-1 py-2 text-xs bg-amber-400 text-black font-bold rounded-xl">Save PIN</button>
+        <button onclick="document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2 text-xs bg-slate-100 dark:bg-neutral-800 rounded-xl text-slate-700 dark:text-white">Cancel</button>
+        <button onclick="submitAdminPinChange()" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-xl">Save PIN</button>
       </div>
     </div>
   </div>
 
   <!-- Custom Delete Confirmation Modal -->
   <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl modal-enter">
-      <div class="w-12 h-12 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">🗑️</div>
+    <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-12 h-12 bg-red-500/15 border border-red-500/30 text-red-500 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">🗑️</div>
       <div>
-        <h3 class="text-sm font-extrabold text-white uppercase">Delete Salon?</h3>
-        <p id="deleteSalonMsg" class="text-xs text-neutral-400 mt-1">This will disconnect the server and terminate all sessions.</p>
+        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white uppercase">Delete Salon?</h3>
+        <p id="deleteSalonMsg" class="text-xs text-slate-500 dark:text-neutral-400 mt-1">This will disconnect the server and terminate all sessions.</p>
       </div>
       <input type="hidden" id="pendingDeleteSlug" value="">
       <div class="flex gap-2 pt-1">
-        <button onclick="closeDeleteSalonModal()" class="flex-1 py-2 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-semibold">Cancel</button>
+        <button onclick="closeDeleteSalonModal()" class="flex-1 py-2 rounded-xl text-xs bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 font-semibold">Cancel</button>
         <button onclick="confirmDeleteSalon()" class="flex-1 py-2 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-extrabold">Yes, Delete</button>
       </div>
     </div>
@@ -82,24 +82,24 @@
 
   <!-- Main Cockpit Container -->
   <div class="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">
-    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="bg-white dark:bg-neutral-900/90 border border-slate-200 dark:border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-lg sm:text-xl font-black text-amber-400 tracking-tight flex items-center gap-2">
+          <h1 class="text-lg sm:text-xl font-black text-amber-500 dark:text-amber-400 tracking-tight flex items-center gap-2">
             <span>⚡</span> SUPER ADMIN PANEL
           </h1>
         </div>
-        <p class="text-xs text-neutral-400 mt-0.5">Secure Salon Days Tracker & Instant Halt Control</p>
+        <p class="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">Secure Salon Days Tracker & Instant Halt Control</p>
       </div>
 
       <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
-        <button onclick="openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3 py-2 rounded-xl text-amber-400 font-semibold transition-all">
+        <button onclick="openChangeAdminPinModal()" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-amber-500 dark:text-amber-400 font-semibold transition-all">
           🔑 PIN
         </button>
-        <button onclick="fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3 py-2 rounded-xl text-neutral-300 font-semibold transition-all">
+        <button onclick="fetchAllSalons()" class="text-xs bg-slate-100 dark:bg-neutral-950 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 px-3 py-2 rounded-xl text-slate-700 dark:text-neutral-300 font-semibold transition-all">
           ↻ Refresh
         </button>
-        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3 py-2 rounded-xl text-red-400 font-semibold transition-all">
+        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3 py-2 rounded-xl text-red-500 dark:text-red-400 font-semibold transition-all">
           Logout 🔒
         </button>
       </div>
@@ -107,28 +107,28 @@
 
     <!-- Analytics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div class="bg-neutral-900/60 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
-        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
-        <div id="statTotalSalons" class="text-2xl sm:text-3xl font-black text-white font-mono-num mt-1">0</div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
+        <div id="statTotalSalons" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
-        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Active & Running</span>
-        <div id="statActiveSalons" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono-num mt-1">0</div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Active & Running</span>
+        <div id="statActiveSalons" class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
-        <span class="text-xs text-neutral-400 uppercase font-bold tracking-wider">Halted / Frozen</span>
-        <div id="statHaltedSalons" class="text-2xl sm:text-3xl font-black text-red-400 font-mono-num mt-1">0</div>
+      <div class="bg-white dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-sm">
+        <span class="text-xs text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Halted / Frozen</span>
+        <div id="statHaltedSalons" class="text-2xl sm:text-3xl font-black text-red-500 font-mono-num mt-1">0</div>
       </div>
     </div>
 
     <!-- Salons Table Section -->
-    <div class="bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 sm:p-6 shadow-sm space-y-4">
-      <h2 class="text-sm font-bold text-neutral-300 uppercase tracking-wider">All Managed Salons</h2>
+    <div class="bg-white dark:bg-neutral-900/80 border border-slate-200 dark:border-neutral-800 rounded-3xl p-3 sm:p-6 shadow-sm space-y-4">
+      <h2 class="text-sm font-bold text-slate-700 dark:text-neutral-300 uppercase tracking-wider">All Managed Salons</h2>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[600px]">
           <thead>
-            <tr class="border-b border-neutral-800 text-[11px] text-neutral-400 uppercase tracking-wider">
+            <tr class="border-b border-slate-200 dark:border-neutral-800 text-[11px] text-slate-400 dark:text-neutral-400 uppercase tracking-wider">
               <th class="py-3 px-2">Salon Name & Slug</th>
               <th class="py-3 px-2">Onboard Date</th>
               <th class="py-3 px-2">Running Since</th>
@@ -136,15 +136,15 @@
               <th class="py-3 px-2 text-right">Admin Actions</th>
             </tr>
           </thead>
-          <tbody id="salonsTableBody" class="divide-y divide-neutral-800/60 text-xs">
-            <tr><td colspan="5" class="text-center py-8 text-neutral-500">Loading managed salons...</td></tr>
+          <tbody id="salonsTableBody" class="divide-y divide-slate-100 dark:divide-neutral-800/60 text-xs">
+            <tr><td colspan="5" class="text-center py-8 text-slate-400">Loading managed salons...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <footer class="w-full py-4 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6">
+  <footer class="w-full py-4 text-center text-xs text-slate-400 dark:text-neutral-500 border-t border-slate-200 dark:border-neutral-900 mt-6">
     <span>🔒 Passcode Protected Cockpit • 2026</span>
   </footer>
 
@@ -237,35 +237,35 @@
 
       const tbody = document.getElementById('salonsTableBody');
       if (total === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-neutral-500">No salons onboarded yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No salons onboarded yet.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = salons.map(s => `
-        <tr class="hover:bg-neutral-800/40 transition-all">
+        <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/40 transition-all">
           <td class="py-3 px-2">
-            <span class="font-bold text-white block uppercase text-xs">${s.shopName}</span>
-            <span class="text-[10px] text-amber-400 font-mono">salon=${s.slug}</span>
+            <span class="font-bold text-slate-900 dark:text-white block uppercase text-xs">${s.shopName}</span>
+            <span class="text-[10px] text-amber-500 dark:text-amber-400 font-mono">salon=${s.slug}</span>
           </td>
-          <td class="py-3 px-2 text-neutral-400 font-mono text-[11px]">
+          <td class="py-3 px-2 text-slate-500 dark:text-neutral-400 font-mono text-[11px]">
             ${new Date(s.onboardedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
           </td>
-          <td class="py-3 px-2 text-emerald-400 font-bold font-mono-num text-[11px]">
+          <td class="py-3 px-2 text-emerald-600 dark:text-emerald-400 font-bold font-mono-num text-[11px]">
             ${s.daysOnboarded}D
           </td>
           <td class="py-3 px-2">
-            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
+            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold ${s.isHalted ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'}">
               ${s.isHalted ? 'HALTED' : 'ACTIVE'}
             </span>
           </td>
           <td class="py-3 px-2 text-right">
             <div class="flex items-center justify-end gap-1 flex-wrap">
-              <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 text-amber-400 px-2 py-1 rounded text-[10px]">🔑 PIN</button>
-              <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600' : 'bg-red-500/20 text-red-400'} px-2 py-1 rounded text-[10px] font-bold">
+              <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-slate-100 dark:bg-neutral-800 text-amber-600 dark:text-amber-400 px-2 py-1 rounded text-[10px]">🔑 PIN</button>
+              <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-500'} px-2 py-1 rounded text-[10px] font-bold">
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
-              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 text-neutral-300 px-2 py-1 rounded text-[10px]">Studio ↗</a>
-              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-[10px]" title="Delete">🗑️</button>
+              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 px-2 py-1 rounded text-[10px]">Studio ↗</a>
+              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 text-red-500 px-2 py-1 rounded text-[10px]" title="Delete">🗑️</button>
             </div>
           </td>
         </tr>
@@ -322,7 +322,6 @@
       } catch (e) {}
     }
 
-    // On page load, keep auth modal active
     document.getElementById('adminAuthModal').classList.remove('hidden');
   </script>
 </body>

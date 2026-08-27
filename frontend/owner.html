@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Owner Studio Control - Luxe Salon</title>
+  <title>Owner Studio Sign In - Luxe Salon</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script>
@@ -28,13 +28,13 @@
 </head>
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between transition-colors duration-200">
 
-  <!-- Strict Passcode Authentication Screen -->
-  <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-40">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter">
+  <!-- Sign In / Authentication Screen (Aligned to top / safe for mobile keyboard) -->
+  <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-40 overflow-y-auto">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl modal-enter mb-8">
       <div class="w-12 h-12 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl">🔐</div>
       <div>
-        <h2 id="authTitle" class="text-lg font-black text-white">Owner Studio Login</h2>
-        <p id="authSubtitle" class="text-xs text-neutral-400 mt-1">Enter your salon name and 4-digit PIN.</p>
+        <h2 id="authTitle" class="text-lg font-black text-white">Owner Studio Sign In</h2>
+        <p id="authSubtitle" class="text-xs text-neutral-400 mt-1">Enter your salon name and security PIN to access your dashboard.</p>
       </div>
 
       <form onsubmit="event.preventDefault(); submitAuth();" class="space-y-3 text-left pt-1">
@@ -47,7 +47,7 @@
           <input id="authPinInput" type="password" maxlength="8" placeholder="Enter PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-2.5 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
         </div>
         <button type="submit" id="authActionBtn" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs py-3.5 rounded-xl transition-all shadow-md mt-1 cursor-pointer">
-          Unlock Dashboard ➔
+          Sign In to Dashboard ➔
         </button>
         <p id="authErrorMsg" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
       </form>
@@ -351,12 +351,11 @@
 
         if (data.status === 'FIRST_TIME') {
           isFirstTimeSetup = true;
-          document.getElementById('authTitle').innerText = 'Set Owner Passcode';
-          document.getElementById('authSubtitle').innerText = 'Enter your salon name and create a 4-digit PIN.';
-          document.getElementById('authActionBtn').innerText = 'Save PIN & Enter ➔';
+          document.getElementById('authTitle').innerText = 'Owner Studio Sign In';
+          document.getElementById('authSubtitle').innerText = 'Enter your salon name and security PIN to access your dashboard.';
+          document.getElementById('authActionBtn').innerText = 'Sign In to Dashboard ➔';
           document.getElementById('authScreen').classList.remove('hidden');
         } else {
-          // If already set up, keep lock screen active until passcode is entered
           document.getElementById('authScreen').classList.remove('hidden');
         }
       } catch (e) {
