@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve Frontend Static Files
+// Serve static frontend files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const PORT = process.env.PORT || 5000;
@@ -68,18 +68,18 @@ const salonSchema = new mongoose.Schema({
 const Salon = mongoose.model('Salon', salonSchema);
 
 async function initAdmin() {
-  const existingAdmin = await Admin.findOne();
-  if (!existingAdmin) {
+  const adminExists = await Admin.findOne();
+  if (!adminExists) {
     const salt = await bcrypt.genSalt(10);
-    const defaultPin = process.env.DEFAULT_ADMIN_PIN || '8899';
-    const hash = await bcrypt.hash(defaultPin, salt);
+    const pin = process.env.DEFAULT_ADMIN_PIN || '8899';
+    const hash = await bcrypt.hash(pin, salt);
     await Admin.create({ masterPinHash: hash });
     console.log('🛡️ Default Super Admin initialized with secure hash.');
   }
 }
 initAdmin();
 
-// Middleware: Verify Super Admin JWT
+// JWT check middleware for admin
 function verifyAdminJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -92,7 +92,7 @@ function verifyAdminJWT(req, res, next) {
   });
 }
 
-// ✅ SECURE MIDDLEWARE: Verify Salon Owner JWT for specific tenant
+// Tenant salon owner token verification
 function verifySalonJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -121,11 +121,11 @@ const bookingLimiter = rateLimit({
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { pin } = req.body;
-    const admin = await Admin.findOne();
-    if (!admin) return res.status(500).json({ success: false, error: 'Admin not initialized.' });
+    const adminDoc = await Admin.findOne();
+    if (!adminDoc) return res.status(500).json({ success: false, error: 'Admin not initialized.' });
 
-    const isMatch = await bcrypt.compare(pin, admin.masterPinHash);
-    if (!isMatch) {
+    const matched = await bcrypt.compare(pin, adminDoc.masterPinHash);
+    if (!matched) {
       return res.status(401).json({ success: false, error: 'Invalid Master PIN.' });
     }
 
@@ -139,10 +139,10 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/admin/change-pin', verifyAdminJWT, async (req, res) => {
   try {
     const { currentPin, newPin } = req.body;
-    const admin = await Admin.findOne();
+    const adminDoc = await Admin.findOne();
     
-    const isMatch = await bcrypt.compare(currentPin, admin.masterPinHash);
-    if (!isMatch) {
+    const matched = await bcrypt.compare(currentPin, adminDoc.masterPinHash);
+    if (!matched) {
       return res.status(400).json({ success: false, error: 'Current Master PIN is incorrect.' });
     }
     if (!newPin || newPin.length < 4) {
@@ -150,8 +150,8 @@ app.post('/api/admin/change-pin', verifyAdminJWT, async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    admin.masterPinHash = await bcrypt.hash(newPin, salt);
-    await admin.save();
+    adminDoc.masterPinHash = await bcrypt.hash(newPin, salt);
+    await adminDoc.save();
 
     res.json({ success: true, message: 'Master PIN updated securely.' });
   } catch (err) {
@@ -161,16 +161,16 @@ app.post('/api/admin/change-pin', verifyAdminJWT, async (req, res) => {
 
 app.get('/api/admin/salons', verifyAdminJWT, async (req, res) => {
   try {
-    const salons = await Salon.find({});
-    const salonList = salons.map(s => {
+    const allSalons = await Salon.find({});
+    const salonList = allSalons.map(s => {
       const diffTime = Math.abs(new Date() - new Date(s.onboardedAt));
-      const daysOnboarded = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return {
         slug: s.slug,
         shopName: s.shopName,
         isHalted: s.isHalted,
         onboardedAt: s.onboardedAt,
-        daysOnboarded: daysOnboarded
+        daysOnboarded: days
       };
     });
     res.json(salonList);
@@ -182,12 +182,12 @@ app.get('/api/admin/salons', verifyAdminJWT, async (req, res) => {
 app.post('/api/admin/toggle-halt', verifyAdminJWT, async (req, res) => {
   try {
     const { slug } = req.body;
-    const salon = await Salon.findOne({ slug });
-    if (!salon) return res.status(404).json({ error: 'Salon not found.' });
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) return res.status(404).json({ error: 'Salon not found.' });
 
-    salon.isHalted = !salon.isHalted;
-    await salon.save();
-    res.json({ success: true, isHalted: salon.isHalted });
+    targetSalon.isHalted = !targetSalon.isHalted;
+    await targetSalon.save();
+    res.json({ success: true, isHalted: targetSalon.isHalted });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -196,14 +196,14 @@ app.post('/api/admin/toggle-halt', verifyAdminJWT, async (req, res) => {
 app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
   try {
     const { slug, newPasscode } = req.body;
-    const salon = await Salon.findOne({ slug });
-    if (!salon || !newPasscode || newPasscode.length < 4) {
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon || !newPasscode || newPasscode.length < 4) {
       return res.status(400).json({ error: 'Invalid PIN or salon slug.' });
     }
 
     const salt = await bcrypt.genSalt(10);
-    salon.passcodeHash = await bcrypt.hash(newPasscode, salt);
-    await salon.save();
+    targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
+    await targetSalon.save();
     res.json({ success: true, message: `PIN reset successfully for ${slug}` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -213,8 +213,8 @@ app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
 app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   try {
     const { slug } = req.body;
-    const result = await Salon.findOneAndDelete({ slug });
-    if (!result) return res.status(404).json({ success: false, error: 'Salon not found.' });
+    const delResult = await Salon.findOneAndDelete({ slug });
+    if (!delResult) return res.status(404).json({ success: false, error: 'Salon not found.' });
     res.json({ success: true, message: 'Salon deleted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -224,14 +224,14 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
 app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
-    let salon = await Salon.findOne({ slug });
-    if (!salon) {
+    let targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) {
       return res.status(404).json({ success: false, error: 'Salon not found.' });
     } else {
-      salon.isOnline = !salon.isOnline;
-      await salon.save();
+      targetSalon.isOnline = !targetSalon.isOnline;
+      await targetSalon.save();
     }
-    res.json({ success: true, isOnline: salon.isOnline });
+    res.json({ success: true, isOnline: targetSalon.isOnline });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -240,10 +240,10 @@ app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
 app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
-    let salon = await Salon.findOne({ slug });
+    let targetSalon = await Salon.findOne({ slug });
 
-    if (!salon) {
-      salon = await Salon.create({
+    if (!targetSalon) {
+      targetSalon = await Salon.create({
         slug: slug,
         shopName: slug.replace(/-/g, ' ').toUpperCase(),
         isOnline: true,
@@ -256,10 +256,10 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
       return res.json({ status: 'FIRST_TIME' });
     }
 
-    if (salon.isHalted) {
-      return res.json({ status: 'HALTED', message: salon.haltReason });
+    if (targetSalon.isHalted) {
+      return res.json({ status: 'HALTED', message: targetSalon.haltReason });
     }
-    if (!salon.passcodeHash) {
+    if (!targetSalon.passcodeHash) {
       return res.json({ status: 'FIRST_TIME' });
     }
 
@@ -268,10 +268,9 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
       return res.json({ authenticated: false });
     }
 
-    const isMatch = await bcrypt.compare(passcode, salon.passcodeHash);
-    if (isMatch) {
-      // ✅ SECURE FIX: Generate a real cryptographic JWT signed with JWT_SECRET
-      const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+    const matched = await bcrypt.compare(passcode, targetSalon.passcodeHash);
+    if (matched) {
+      const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
       return res.json({ authenticated: true, token });
     } else {
       return res.json({ authenticated: false, message: 'Incorrect PIN.' });
@@ -289,9 +288,9 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Passcode must be at least 4 digits.' });
     }
 
-    let salon = await Salon.findOne({ slug });
-    if (!salon) {
-      salon = new Salon({ 
+    let targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) {
+      targetSalon = new Salon({ 
         slug, 
         shopName: slug.replace(/-/g, ' ').toUpperCase(),
         isOnline: true,
@@ -304,11 +303,10 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    salon.passcodeHash = await bcrypt.hash(newPasscode, salt);
-    await salon.save();
+    targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
+    await targetSalon.save();
 
-    // ✅ SECURE FIX: Return signed JWT
-    const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -319,12 +317,12 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
   try {
     const slug = req.params.salon;
     const { currentPasscode, newPasscode } = req.body;
-    const salon = await Salon.findOne({ slug });
+    const targetSalon = await Salon.findOne({ slug });
 
-    if (!salon) return res.status(404).json({ success: false, message: 'Salon not found.' });
+    if (!targetSalon) return res.status(404).json({ success: false, message: 'Salon not found.' });
 
-    const isMatch = await bcrypt.compare(currentPasscode, salon.passcodeHash);
-    if (!isMatch) {
+    const matched = await bcrypt.compare(currentPasscode, targetSalon.passcodeHash);
+    if (!matched) {
       return res.status(400).json({ success: false, message: 'Current PIN is incorrect.' });
     }
     if (!newPasscode || newPasscode.length < 4) {
@@ -332,10 +330,10 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
     }
 
     const salt = await bcrypt.genSalt(10);
-    salon.passcodeHash = await bcrypt.hash(newPasscode, salt);
-    await salon.save();
+    targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
+    await targetSalon.save();
 
-    const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -345,22 +343,22 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
 app.get('/api/:salon/state', async (req, res) => {
   try {
     const slug = req.params.salon;
-    let salon = await Salon.findOne({ slug });
-    if (!salon) {
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) {
       return res.status(404).json({ status: 'DELETED', message: 'Server Disconnected: Salon has been deleted by Super Admin.' });
     }
 
-    if (salon.isHalted) {
-      return res.status(403).json({ status: 'HALTED', message: salon.haltReason });
+    if (targetSalon.isHalted) {
+      return res.status(403).json({ status: 'HALTED', message: targetSalon.haltReason });
     }
 
     res.json({
-      shopName: salon.shopName,
-      isOnline: salon.isOnline,
-      todayServed: salon.todayServed,
-      todayRevenue: salon.todayRevenue,
-      chairs: salon.chairs,
-      queue: salon.queue
+      shopName: targetSalon.shopName,
+      isOnline: targetSalon.isOnline,
+      todayServed: targetSalon.todayServed,
+      todayRevenue: targetSalon.todayRevenue,
+      chairs: targetSalon.chairs,
+      queue: targetSalon.queue
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -371,13 +369,13 @@ app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { shopName } = req.body;
-    const salon = await Salon.findOne({ slug });
-    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
     if (shopName) {
-      salon.shopName = shopName;
-      await salon.save();
+      targetSalon.shopName = shopName;
+      await targetSalon.save();
     }
-    res.json({ success: true, shopName: salon.shopName });
+    res.json({ success: true, shopName: targetSalon.shopName });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -386,13 +384,13 @@ app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
 app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
-    const salon = await Salon.findOne({ slug });
-    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
     
-    salon.todayServed = 0;
-    salon.todayRevenue = 0;
-    salon.queue = [];
-    salon.chairs.forEach(c => {
+    targetSalon.todayServed = 0;
+    targetSalon.todayRevenue = 0;
+    targetSalon.queue = [];
+    targetSalon.chairs.forEach(c => {
       c.status = 'FREE';
       c.currentToken = null;
       c.customerName = '';
@@ -400,7 +398,7 @@ app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
       c.amount = 150;
       c.remainingMinutes = 0;
     });
-    await salon.save();
+    await targetSalon.save();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -416,9 +414,9 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Customer name is mandatory.' });
     }
 
-    let salon = await Salon.findOne({ slug });
-    if (!salon) {
-      salon = await Salon.create({
+    let targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) {
+      targetSalon = await Salon.create({
         slug: slug,
         shopName: slug.replace(/-/g, ' ').toUpperCase(),
         isOnline: true,
@@ -430,16 +428,16 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       });
     }
 
-    if (salon.isHalted) {
+    if (targetSalon.isHalted) {
       return res.status(403).json({ success: false, error: 'Server Disconnected: Salon is unavailable.' });
     }
 
     const durationMins = Number(totalDurationMinutes) || 20;
-    const maxQueueToken = salon.queue.length > 0 ? Math.max(...salon.queue.map(q => q.tokenNumber)) : 0;
-    const maxChairToken = salon.chairs.reduce((max, c) => c.currentToken ? Math.max(max, c.currentToken) : max, 0);
-    const nextTokenNum = Math.max(maxQueueToken, maxChairToken, salon.todayServed) + 1;
+    const maxQueueToken = targetSalon.queue.length > 0 ? Math.max(...targetSalon.queue.map(q => q.tokenNumber)) : 0;
+    const maxChairToken = targetSalon.chairs.reduce((max, c) => c.currentToken ? Math.max(max, c.currentToken) : max, 0);
+    const nextTokenNum = Math.max(maxQueueToken, maxChairToken, targetSalon.todayServed) + 1;
 
-    const booking = {
+    const bookingItem = {
       tokenNumber: nextTokenNum,
       customerName: customerName.trim(),
       services: services || ['Haircut'],
@@ -448,28 +446,28 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       createdAt: new Date()
     };
 
-    const freeChair = salon.isOnline ? salon.chairs.find(c => c.status === 'FREE') : null;
+    const freeChair = targetSalon.isOnline ? targetSalon.chairs.find(c => c.status === 'FREE') : null;
     if (freeChair) {
       freeChair.status = 'BUSY';
-      freeChair.currentToken = booking.tokenNumber;
-      freeChair.customerName = booking.customerName;
-      freeChair.services = booking.services;
-      freeChair.amount = booking.totalPrice;
+      freeChair.currentToken = bookingItem.tokenNumber;
+      freeChair.customerName = bookingItem.customerName;
+      freeChair.services = bookingItem.services;
+      freeChair.amount = bookingItem.totalPrice;
       freeChair.remainingMinutes = durationMins;
-      booking.estimatedWaitMinutes = 0;
+      bookingItem.estimatedWaitMinutes = 0;
     } else {
-      let workloads = salon.chairs.map(c => (c.status === 'BUSY' ? (c.remainingMinutes || 20) : 0));
-      salon.queue.forEach(q => {
+      let workloads = targetSalon.chairs.map(c => (c.status === 'BUSY' ? (c.remainingMinutes || 20) : 0));
+      targetSalon.queue.forEach(q => {
         let minIdx = workloads.indexOf(Math.min(...workloads));
         workloads[minIdx] += (q.totalDurationMinutes || 20);
       });
       let bestChairIdx = workloads.indexOf(Math.min(...workloads));
-      booking.estimatedWaitMinutes = workloads[bestChairIdx];
-      salon.queue.push(booking);
+      bookingItem.estimatedWaitMinutes = workloads[bestChairIdx];
+      targetSalon.queue.push(bookingItem);
     }
 
-    await salon.save();
-    res.json({ success: true, booking, tokenNumber: nextTokenNum });
+    await targetSalon.save();
+    res.json({ success: true, booking: bookingItem, tokenNumber: nextTokenNum });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -479,21 +477,21 @@ app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
-    const salon = await Salon.findOne({ slug });
-    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
 
-    const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
-    const qIndex = salon.queue.findIndex(q => q.tokenNumber === Number(tokenNumber));
+    const targetChair = targetSalon.chairs.find(c => c.chairNumber === Number(chairNumber));
+    const qIndex = targetSalon.queue.findIndex(q => q.tokenNumber === Number(tokenNumber));
 
-    if (chair && qIndex !== -1) {
-      const customer = salon.queue.splice(qIndex, 1)[0];
-      chair.status = 'BUSY';
-      chair.currentToken = customer.tokenNumber;
-      chair.customerName = customer.customerName;
-      chair.services = customer.services;
-      chair.amount = customer.totalPrice || 150;
-      chair.remainingMinutes = customer.totalDurationMinutes || 20;
-      await salon.save();
+    if (targetChair && qIndex !== -1) {
+      const customer = targetSalon.queue.splice(qIndex, 1)[0];
+      targetChair.status = 'BUSY';
+      targetChair.currentToken = customer.tokenNumber;
+      targetChair.customerName = customer.customerName;
+      targetChair.services = customer.services;
+      targetChair.amount = customer.totalPrice || 150;
+      targetChair.remainingMinutes = customer.totalDurationMinutes || 20;
+      await targetSalon.save();
     }
     res.json({ success: true });
   } catch (err) {
@@ -505,30 +503,30 @@ app.post('/api/:salon/chair/complete', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { chairNumber } = req.body;
-    const salon = await Salon.findOne({ slug });
-    if (!salon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
+    const targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon deleted.' });
 
-    const chair = salon.chairs.find(c => c.chairNumber === Number(chairNumber));
-    if (chair && chair.status === 'BUSY') {
-      salon.todayServed += 1;
-      salon.todayRevenue += (chair.amount || 150);
+    const targetChair = targetSalon.chairs.find(c => c.chairNumber === Number(chairNumber));
+    if (targetChair && targetChair.status === 'BUSY') {
+      targetSalon.todayServed += 1;
+      targetSalon.todayRevenue += (targetChair.amount || 150);
 
-      if (salon.isOnline && salon.queue.length > 0) {
-        const nextCustomer = salon.queue.shift();
-        chair.currentToken = nextCustomer.tokenNumber;
-        chair.customerName = nextCustomer.customerName;
-        chair.services = nextCustomer.services;
-        chair.amount = nextCustomer.totalPrice || 150;
-        chair.remainingMinutes = nextCustomer.totalDurationMinutes || 20;
+      if (targetSalon.isOnline && targetSalon.queue.length > 0) {
+        const nextCustomer = targetSalon.queue.shift();
+        targetChair.currentToken = nextCustomer.tokenNumber;
+        targetChair.customerName = nextCustomer.customerName;
+        targetChair.services = nextCustomer.services;
+        targetChair.amount = nextCustomer.totalPrice || 150;
+        targetChair.remainingMinutes = nextCustomer.totalDurationMinutes || 20;
       } else {
-        chair.status = 'FREE';
-        chair.currentToken = null;
-        chair.customerName = '';
-        chair.services = [];
-        chair.amount = 150;
-        chair.remainingMinutes = 0;
+        targetChair.status = 'FREE';
+        targetChair.currentToken = null;
+        targetChair.customerName = '';
+        targetChair.services = [];
+        targetChair.amount = 150;
+        targetChair.remainingMinutes = 0;
       }
-      await salon.save();
+      await targetSalon.save();
     }
     res.json({ success: true });
   } catch (err) {
