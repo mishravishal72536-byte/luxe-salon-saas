@@ -301,7 +301,8 @@
     let isShopOnline = true;
 
     function sanitizeHTML(str) {
-      return str.replace(/[&<>'"]/g, 
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
       );
     }
