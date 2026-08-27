@@ -414,9 +414,11 @@
           return;
         }
 
-        if (res.ok && (data.success || data.authenticated || data.token || isFirstTimeSetup)) {
-          const token = data.token || ('jwt_token_' + tenantSlug);
-          localStorage.setItem(`${tenantSlug}_jwt_token`, token);
+        if (res.ok && (data.success || data.authenticated || data.token)) {
+          const token = data.token;
+          if (token) {
+            localStorage.setItem(`${tenantSlug}_jwt_token`, token);
+          }
           
           document.getElementById('authScreen').classList.add('hidden');
           try { confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } }); } catch (e) {}
@@ -435,10 +437,14 @@
     }
 
     async function toggleShopOnlineStatus() {
+      const token = getOwnerToken();
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/toggle-online`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
         const data = await res.json();
         if (res.ok && data.success) {

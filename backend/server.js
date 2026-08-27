@@ -71,7 +71,6 @@ async function initAdmin() {
   const existingAdmin = await Admin.findOne();
   if (!existingAdmin) {
     const salt = await bcrypt.genSalt(10);
-    // Secure improvement: Read from environment variable with fallback
     const defaultPin = process.env.DEFAULT_ADMIN_PIN || '8899';
     const hash = await bcrypt.hash(defaultPin, salt);
     await Admin.create({ masterPinHash: hash });
@@ -80,6 +79,7 @@ async function initAdmin() {
 }
 initAdmin();
 
+// Middleware: Verify Super Admin JWT
 function verifyAdminJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -88,6 +88,22 @@ function verifyAdminJWT(req, res, next) {
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ success: false, error: 'Invalid or expired token.' });
     req.admin = user;
+    next();
+  });
+}
+
+// ✅ SECURE MIDDLEWARE: Verify Salon Owner JWT for specific tenant
+function verifySalonJWT(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ success: false, error: 'Access Denied. No token provided.' });
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ success: false, error: 'Invalid or expired token.' });
+    if (decoded.slug !== req.params.salon && decoded.role !== 'superadmin') {
+      return res.status(403).json({ success: false, error: 'Unauthorized salon access.' });
+    }
+    req.salonUser = decoded;
     next();
   });
 }
@@ -205,21 +221,12 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/toggle-online', async (req, res) => {
+app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     let salon = await Salon.findOne({ slug });
     if (!salon) {
-      salon = await Salon.create({
-        slug: slug,
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
-        isOnline: true,
-        chairs: [
-          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
-        ]
-      });
+      return res.status(404).json({ success: false, error: 'Salon not found.' });
     } else {
       salon.isOnline = !salon.isOnline;
       await salon.save();
@@ -263,7 +270,9 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
 
     const isMatch = await bcrypt.compare(passcode, salon.passcodeHash);
     if (isMatch) {
-      return res.json({ authenticated: true, token: 'jwt_token_' + slug });
+      // ✅ SECURE FIX: Generate a real cryptographic JWT signed with JWT_SECRET
+      const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+      return res.json({ authenticated: true, token });
     } else {
       return res.json({ authenticated: false, message: 'Incorrect PIN.' });
     }
@@ -298,13 +307,15 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
     salon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await salon.save();
 
-    res.json({ success: true, token: 'jwt_token_' + slug });
+    // ✅ SECURE FIX: Return signed JWT
+    const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.post('/api/:salon/auth/change-passcode', async (req, res) => {
+app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { currentPasscode, newPasscode } = req.body;
@@ -324,7 +335,8 @@ app.post('/api/:salon/auth/change-passcode', async (req, res) => {
     salon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await salon.save();
 
-    res.json({ success: true, token: 'jwt_token_' + slug });
+    const token = jwt.sign({ slug: salon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -355,7 +367,7 @@ app.get('/api/:salon/state', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/rename', async (req, res) => {
+app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { shopName } = req.body;
@@ -371,7 +383,7 @@ app.post('/api/:salon/rename', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/reset-day', async (req, res) => {
+app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const salon = await Salon.findOne({ slug });
@@ -463,7 +475,7 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/start', async (req, res) => {
+app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
@@ -489,7 +501,7 @@ app.post('/api/:salon/chair/start', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/complete', async (req, res) => {
+app.post('/api/:salon/chair/complete', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { chairNumber } = req.body;
