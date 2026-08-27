@@ -151,6 +151,10 @@
   <script>
     const API_BASE = "https://luxe-salon-saas.onrender.com/api";
 
+    function getAdminToken() {
+      return localStorage.getItem('luxe_super_admin_auth');
+    }
+
     async function handleAdminLogin(e) {
       e.preventDefault();
       const pin = document.getElementById('adminMasterPinInput').value.trim();
@@ -165,6 +169,7 @@
         });
         const data = await res.json();
         if (data.success) {
+          localStorage.setItem('luxe_super_admin_auth', 'true');
           document.getElementById('adminAuthModal').classList.add('hidden');
           fetchAllSalons();
         } else {
@@ -176,6 +181,7 @@
     }
 
     function adminLogout() {
+      localStorage.removeItem('luxe_super_admin_auth');
       document.getElementById('adminMasterPinInput').value = '';
       document.getElementById('adminAuthModal').classList.remove('hidden');
     }
@@ -212,6 +218,11 @@
     }
 
     async function fetchAllSalons() {
+      if (!getAdminToken()) {
+        document.getElementById('adminAuthModal').classList.remove('hidden');
+        return;
+      }
+
       try {
         const res = await fetch(`${API_BASE}/admin/salons`);
         if (!res.ok) {
@@ -222,7 +233,7 @@
         document.getElementById('adminAuthModal').classList.add('hidden');
         renderSalonsTable(salons);
       } catch (e) {
-        adminLogout();
+        // Keep cockpit open or handle network gracefully
       }
     }
 
@@ -322,7 +333,13 @@
       } catch (e) {}
     }
 
-    document.getElementById('adminAuthModal').classList.remove('hidden');
+    // Check auth on load
+    if (getAdminToken()) {
+      document.getElementById('adminAuthModal').classList.add('hidden');
+      fetchAllSalons();
+    } else {
+      document.getElementById('adminAuthModal').classList.remove('hidden');
+    }
   </script>
 </body>
 </html>
