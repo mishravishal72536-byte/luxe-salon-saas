@@ -168,8 +168,8 @@
           body: JSON.stringify({ pin })
         });
         const data = await res.json();
-        if (data.success) {
-          localStorage.setItem('luxe_super_admin_auth', 'true');
+        if (res.ok && data.success) {
+          localStorage.setItem('luxe_super_admin_auth', data.token);
           document.getElementById('adminAuthModal').classList.add('hidden');
           fetchAllSalons();
         } else {
@@ -200,9 +200,13 @@
       errBox.innerText = '';
 
       try {
+        const token = getAdminToken();
         const res = await fetch(`${API_BASE}/admin/change-pin`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ currentPin, newPin })
         });
         const data = await res.json();
@@ -218,21 +222,28 @@
     }
 
     async function fetchAllSalons() {
-      if (!getAdminToken()) {
+      const token = getAdminToken();
+      if (!token) {
         document.getElementById('adminAuthModal').classList.remove('hidden');
         return;
       }
 
       try {
-        const res = await fetch(`${API_BASE}/admin/salons`);
+        const res = await fetch(`${API_BASE}/admin/salons`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!res.ok) {
-          // Do not log out automatically on temporary network/rate-limit errors[cite: 1]
+          if (res.status === 401 || res.status === 403) {
+            adminLogout();
+          }
           return;
         }
         const salons = await res.json();
         document.getElementById('adminAuthModal').classList.add('hidden');
         renderSalonsTable(salons);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore temporary network drops
+      }
     }
 
     function renderSalonsTable(salons) {
@@ -283,9 +294,13 @@
 
     async function toggleHaltSalon(slug) {
       try {
+        const token = getAdminToken();
         await fetch(`${API_BASE}/admin/toggle-halt`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ slug })
         });
         fetchAllSalons();
@@ -296,9 +311,13 @@
       const newPasscode = prompt(`Enter new 4-digit PIN for (${slug}):`);
       if (!newPasscode || newPasscode.length < 4) return;
       try {
+        const token = getAdminToken();
         await fetch(`${API_BASE}/admin/reset-salon-pin`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ slug, newPasscode })
         });
         alert('PIN reset successfully!');
@@ -322,9 +341,13 @@
       if (!slug) return;
 
       try {
+        const token = getAdminToken();
         await fetch(`${API_BASE}/admin/delete`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ slug })
         });
         fetchAllSalons();
@@ -335,7 +358,6 @@
       document.getElementById('adminAuthModal').classList.add('hidden');
       fetchAllSalons();
     } else {
-      document.getElementById('adminAuthModal').classList.add('hidden'); // safely handled or keep hidden until auth checked
       document.getElementById('adminAuthModal').classList.remove('hidden');
     }
   </script>

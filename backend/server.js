@@ -10,11 +10,8 @@ require('dotenv').config();
 
 const app = express();
 
-// Security Enhancements: Restrict CORS to trusted domains if needed
 app.use(cors());
 app.use(bodyParser.json());
-
-// Serve static frontend files safely
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const PORT = process.env.PORT || 5000;
@@ -71,9 +68,9 @@ const Salon = mongoose.model('Salon', salonSchema);
 
 async function initAdmin() {
   try {
-    const adminExists = await Admin.findOne();
+    let adminExists = await Admin.findOne();
     if (!adminExists) {
-      const salt = await bcrypt.genSalt(12); // Increased salt rounds for stronger hashing
+      const salt = await bcrypt.genSalt(10);
       const pin = process.env.DEFAULT_ADMIN_PIN || '8899';
       const hash = await bcrypt.hash(pin, salt);
       await Admin.create({ masterPinHash: hash });
@@ -85,7 +82,7 @@ async function initAdmin() {
 }
 initAdmin();
 
-// JWT check middleware for admin
+// JWT check middleware for admin (made flexible to prevent unnecessary logouts)
 function verifyAdminJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -98,7 +95,6 @@ function verifyAdminJWT(req, res, next) {
   });
 }
 
-// Tenant salon owner token verification with strict slug check
 function verifySalonJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -114,37 +110,39 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-// Rate limiter to prevent brute force on authentication and booking endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 20,
+    max: 50,
     message: { success: false, error: 'Too many requests from this IP, please try again later.' }
 });
 
 const bookingLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
-    max: 15,
-    standardHeaders: true,
-    legacyHeaders: false,
+    max: 30,
     handler: (req, res) => {
-        res.status(429).json({ success: false, error: 'Aapne is network/IP se bohot saare tokens generate kar liye hain.' });
+        res.status(429).json({ success: false, error: 'Aapne is network se bohot saare tokens generate kar liye hain.' });
     }
 });
 
+// Admin Login
 app.post('/api/admin/login', authLimiter, async (req, res) => {
   try {
     const { pin } = req.body;
     if (!pin) return res.status(400).json({ success: false, error: 'PIN is required.' });
 
-    const adminDoc = await Admin.findOne();
-    if (!adminDoc) return res.status(500).json({ success: false, error: 'Admin not initialized.' });
+    let adminDoc = await Admin.findOne();
+    if (!adminDoc) {
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash('8899', salt);
+      adminDoc = await Admin.create({ masterPinHash: hash });
+    }
 
     const matched = await bcrypt.compare(pin, adminDoc.masterPinHash);
     if (!matched) {
       return res.status(401).json({ success: false, error: 'Invalid Master PIN.' });
     }
 
-    const token = jwt.sign({ role: 'superadmin' }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ role: 'superadmin' }, JWT_SECRET, { expiresIn: '24h' });
     return res.json({ success: true, token });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -164,7 +162,7 @@ app.post('/api/admin/change-pin', verifyAdminJWT, async (req, res) => {
       return res.status(400).json({ success: false, error: 'New PIN must be at least 4 digits.' });
     }
 
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     adminDoc.masterPinHash = await bcrypt.hash(newPin, salt);
     await adminDoc.save();
 
@@ -216,7 +214,7 @@ app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
       return res.status(400).json({ error: 'Invalid PIN or salon slug.' });
     }
 
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
     res.json({ success: true, message: `PIN reset successfully for ${slug}` });
@@ -236,38 +234,13 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
-  try {
-    const slug = req.params.salon;
-    let targetSalon = await Salon.findOne({ slug });
-    if (!targetSalon) {
-      return res.status(404).json({ success: false, error: 'Salon not found.' });
-    } else {
-      targetSalon.isOnline = !targetSalon.isOnline;
-      await targetSalon.save();
-    }
-    res.json({ success: true, isOnline: targetSalon.isOnline });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Internal server error.' });
-  }
-});
-
+// Salon Auth Verify
 app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
     let targetSalon = await Salon.findOne({ slug });
 
     if (!targetSalon) {
-      targetSalon = await Salon.create({
-        slug: slug,
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
-        isOnline: true,
-        chairs: [
-          { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 2, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
-          { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
-        ]
-      });
       return res.json({ status: 'FIRST_TIME' });
     }
 
@@ -286,9 +259,9 @@ app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
     const matched = await bcrypt.compare(passcode, targetSalon.passcodeHash);
     if (matched) {
       const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
-      return res.json({ authenticated: true, token });
+      return res.json({ authenticated: true, success: true, token });
     } else {
-      return res.json({ authenticated: false, message: 'Incorrect PIN.' });
+      return res.status(401).json({ authenticated: false, success: false, error: 'Incorrect PIN.' });
     }
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -298,16 +271,16 @@ app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
 app.post('/api/:salon/auth/set-passcode', authLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
-    const { newPasscode } = req.body;
+    const { newPasscode, shopName } = req.body;
     if (!newPasscode || newPasscode.length < 4) {
-      return res.status(400).json({ success: false, message: 'Passcode must be at least 4 digits.' });
+      return res.status(400).json({ success: false, error: 'Passcode must be at least 4 digits.' });
     }
 
     let targetSalon = await Salon.findOne({ slug });
     if (!targetSalon) {
       targetSalon = new Salon({ 
         slug, 
-        shopName: slug.replace(/-/g, ' ').toUpperCase(),
+        shopName: shopName || slug.replace(/-/g, ' ').toUpperCase(),
         isOnline: true,
         chairs: [
           { chairNumber: 1, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 },
@@ -315,9 +288,11 @@ app.post('/api/:salon/auth/set-passcode', authLimiter, async (req, res) => {
           { chairNumber: 3, status: 'FREE', currentToken: null, customerName: '', services: [], amount: 150, remainingMinutes: 0 }
         ]
       });
+    } else if (shopName) {
+      targetSalon.shopName = shopName;
     }
 
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
 
@@ -334,17 +309,17 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
     const { currentPasscode, newPasscode } = req.body;
     const targetSalon = await Salon.findOne({ slug });
 
-    if (!targetSalon) return res.status(404).json({ success: false, message: 'Salon not found.' });
+    if (!targetSalon) return res.status(404).json({ success: false, error: 'Salon not found.' });
 
     const matched = await bcrypt.compare(currentPasscode, targetSalon.passcodeHash);
     if (!matched) {
-      return res.status(400).json({ success: false, message: 'Current PIN is incorrect.' });
+      return res.status(400).json({ success: false, error: 'Current PIN is incorrect.' });
     }
     if (!newPasscode || newPasscode.length < 4) {
-      return res.status(400).json({ success: false, message: 'New PIN must be at least 4 digits.' });
+      return res.status(400).json({ success: false, error: 'New PIN must be at least 4 digits.' });
     }
 
-    const salt = await bcrypt.genSalt(12);
+    const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
 
@@ -375,6 +350,21 @@ app.get('/api/:salon/state', async (req, res) => {
       chairs: targetSalon.chairs,
       queue: targetSalon.queue
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Internal server error.' });
+  }
+});
+
+app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
+  try {
+    const slug = req.params.salon;
+    let targetSalon = await Salon.findOne({ slug });
+    if (!targetSalon) {
+      return res.status(404).json({ success: false, error: 'Salon not found.' });
+    }
+    targetSalon.isOnline = !targetSalon.isOnline;
+    await targetSalon.save();
+    res.json({ success: true, isOnline: targetSalon.isOnline });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
   }
