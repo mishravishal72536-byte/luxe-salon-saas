@@ -35,7 +35,7 @@
         <h2 class="text-lg font-black text-white">Server Disconnected</h2>
         <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
       </div>
-      <button onclick="window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
+      <button onclick="playClickBeep(); window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-3 rounded-xl transition-all">
         Exit to Launcher
       </button>
     </div>
@@ -57,7 +57,7 @@
         <h1 id="shopTitle" class="text-xl font-extrabold text-amber-500 uppercase tracking-tight">SALON</h1>
         <p class="text-[11px] text-slate-500 dark:text-slate-400">Live Queue Pass</p>
       </div>
-      <button onclick="toggleTheme()" id="customerThemeBtn" class="w-9 h-9 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 flex items-center justify-center text-sm shadow-sm">🌙</button>
+      <button onclick="playClickBeep(); toggleTheme()" id="customerThemeBtn" class="w-9 h-9 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 flex items-center justify-center text-sm shadow-sm">🌙</button>
     </div>
 
     <!-- Live Token Pass Card -->
@@ -103,7 +103,7 @@
         <div id="customerChairsLiveGrid" class="grid grid-cols-3 gap-2 text-center"></div>
       </div>
 
-      <button onclick="bookAnother()" class="text-xs bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 font-semibold">+ Book Another Token</button>
+      <button onclick="playClickBeep(); showBookingFormForAnother()" class="text-xs bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 font-semibold">+ Book Another Token</button>
     </div>
 
     <!-- Shop Closed Banner for Booking Area -->
@@ -137,7 +137,7 @@
           <div id="servicesListContainer" class="grid grid-cols-1 gap-2 text-xs max-h-[320px] overflow-y-auto pr-1 custom-scroll"></div>
         </div>
 
-        <button onclick="bookToken()" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md">⚡ Get Live Token Pass</button>
+        <button onclick="playClickBeep(); bookToken()" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md">⚡ Get Live Token Pass</button>
       </div>
     </div>
 
@@ -151,7 +151,7 @@
       <div class="space-y-2 pt-1 border-t border-slate-200 dark:border-neutral-800">
         <input id="reviewAuthor" type="text" placeholder="Your Name" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none">
         <textarea id="reviewText" rows="2" placeholder="Write your review about the salon..." class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none resize-none"></textarea>
-        <button onclick="submitReview()" class="w-full bg-slate-100 dark:bg-neutral-800 hover:bg-amber-500 hover:text-slate-950 text-slate-700 dark:text-neutral-200 font-bold text-xs py-2 rounded-xl transition-all">Submit Review ✍️</button>
+        <button onclick="playClickBeep(); submitReview()" class="w-full bg-slate-100 dark:bg-neutral-800 hover:bg-amber-500 hover:text-slate-950 text-slate-700 dark:text-neutral-200 font-bold text-xs py-2 rounded-xl transition-all">Submit Review ✍️</button>
       </div>
 
       <div id="reviewsListContainer" class="space-y-2 pt-2 max-h-[320px] overflow-y-auto pr-1 custom-scroll"></div>
@@ -167,6 +167,26 @@
   </footer>
 
   <script>
+    function playClickBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
     const API_BASE = "https://luxe-salon-saas.onrender.com/api";
     
     const urlParams = new URLSearchParams(window.location.search);
@@ -200,7 +220,7 @@
       let alertDiv = document.getElementById('floatingAlertBanner') || document.createElement('div');
       alertDiv.id = 'floatingAlertBanner';
       alertDiv.className = 'fixed top-4 inset-x-4 max-w-sm mx-auto bg-amber-500 text-slate-950 px-4 py-3 rounded-2xl shadow-2xl z-50 font-bold text-center border border-amber-300 modal-enter';
-      alertDiv.innerHTML = `<div class="text-sm font-black">${title}</div><div class="text-xs mt-0.5">${body}</div><button onclick="this.parentElement.remove()" class="text-[10px] bg-slate-950 text-amber-400 px-3 py-1 rounded-lg mt-2 uppercase">Dismiss ✕</button>`;
+      alertDiv.innerHTML = `<div class="text-sm font-black">${title}</div><div class="text-xs mt-0.5">${body}</div><button onclick="playClickBeep(); this.parentElement.remove()" class="text-[10px] bg-slate-950 text-amber-400 px-3 py-1 rounded-lg mt-2 uppercase">Dismiss ✕</button>`;
       if (!document.getElementById('floatingAlertBanner')) document.body.appendChild(alertDiv);
       try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(e=>{}); } catch(e){}
     }
@@ -409,8 +429,13 @@
       document.getElementById('cName').value = '';
       document.getElementById('myTokenCard').classList.add('hidden');
       document.getElementById('shopClosedBanner').classList.add('hidden');
-      document.getElementById('bookingForm').classList.remove('hidden');
+      document.getElementById('bookingForm').classList.add('hidden');
       renderCatalog();
+    }
+
+    function showBookingFormForAnother() {
+      document.getElementById('bookingForm').classList.remove('hidden');
+      document.getElementById('myTokenCard').classList.add('hidden');
     }
 
     function loadReviews() {
