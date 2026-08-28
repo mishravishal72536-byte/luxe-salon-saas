@@ -82,24 +82,23 @@
 
   <!-- Main Cockpit Container -->
   <div class="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">
-    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-lg sm:text-xl font-black text-amber-400 tracking-tight flex items-center gap-2 uppercase">
-            <span>⚡</span> Super Admin Cockpit
-          </h1>
-        </div>
-        <p class="text-xs text-neutral-400 mt-0.5">Multi-Tenant Fleet Tracker & Instant Halt Control</p>
+    <!-- Horizontally Centered Top Header Portion -->
+    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center text-center gap-4">
+      <div class="space-y-1">
+        <h1 class="text-lg sm:text-xl font-black text-amber-400 tracking-tight flex items-center justify-center gap-2 uppercase">
+          <span>⚡</span> Super Admin Cockpit
+        </h1>
+        <p class="text-xs text-neutral-400">Multi-Tenant Fleet Tracker & Instant Halt Control</p>
       </div>
 
-      <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
-        <button onclick="openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3.5 py-2.5 rounded-xl text-amber-400 font-bold transition-all shadow-sm">
+      <div class="flex items-center justify-center flex-wrap gap-2 w-full">
+        <button onclick="openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-amber-400 font-bold transition-all shadow-sm">
           🔑 Master PIN
         </button>
-        <button onclick="fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3.5 py-2.5 rounded-xl text-neutral-300 font-bold transition-all shadow-sm">
+        <button onclick="fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-neutral-300 font-bold transition-all shadow-sm">
           ↻ Refresh
         </button>
-        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3.5 py-2.5 rounded-xl text-red-400 font-bold transition-all shadow-sm">
+        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-4 py-2.5 rounded-xl text-red-400 font-bold transition-all shadow-sm">
           Logout 🔒
         </button>
       </div>
@@ -281,12 +280,12 @@
           </td>
           <td class="py-3 px-3 text-right">
             <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-              <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">🔑 PIN</button>
-              <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2.5 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap">
+              <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">🔑 PIN</button>
+              <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap">
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
-              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2.5 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">Studio ↗</a>
-              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2.5 py-1.5 rounded-lg text-[10px] whitespace-nowrap" title="Delete">🗑️</button>
+              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">Studio ↗</a>
+              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2 py-1.5 rounded-lg text-[10px] whitespace-nowrap" title="Delete">🗑️</button>
             </div>
           </td>
         </tr>

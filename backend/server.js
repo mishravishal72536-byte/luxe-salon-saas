@@ -383,7 +383,7 @@ app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
+app.post('/api/:salon/reset-day', async (req, res) => {
   try {
     const slug = req.params.salon;
     const targetSalon = await Salon.findOne({ slug });
