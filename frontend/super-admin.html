@@ -30,7 +30,7 @@
         <p class="text-xs text-neutral-400 mt-1">Enter Master Admin Passcode to access fleet control.</p>
       </div>
 
-      <form onsubmit="handleAdminLogin(event)" class="space-y-3 text-left">
+      <form onsubmit="playClickBeep(); handleAdminLogin(event)" class="space-y-3 text-left">
         <div>
           <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-xl font-mono text-amber-400 focus:border-amber-400 rounded-2xl px-4 py-3.5 focus:outline-none placeholder:text-neutral-600 shadow-inner" required>
         </div>
@@ -58,8 +58,28 @@
       </div>
       <p id="changeAdminPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px]"></p>
       <div class="flex gap-2 pt-1">
-        <button onclick="document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2.5 text-xs bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 font-bold transition-all">Cancel</button>
-        <button onclick="submitAdminPinChange()" class="flex-1 py-2.5 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-md">Save PIN</button>
+        <button onclick="playClickBeep(); document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2.5 text-xs bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); submitAdminPinChange()" class="flex-1 py-2.5 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-md">Save PIN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Reset Salon PIN Modal (Replaces ugly browser prompt) -->
+  <div id="resetSalonPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 modal-enter">
+      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">🔑</div>
+      <div class="text-center">
+        <h3 class="text-sm font-black text-white uppercase tracking-wider">Reset Salon PIN</h3>
+        <p id="resetPinSubTitle" class="text-xs text-neutral-400 mt-1">Enter new 4-digit PIN for salon.</p>
+      </div>
+      <input type="hidden" id="pendingResetSlug" value="">
+      <div>
+        <input id="modalNewSalonPin" type="password" maxlength="8" placeholder="Enter new PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
+      </div>
+      <p id="resetPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px] text-center"></p>
+      <div class="flex gap-2 pt-1">
+        <button onclick="playClickBeep(); closeResetSalonPinModal()" class="flex-1 py-2.5 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); confirmResetSalonPin()" class="flex-1 py-2.5 rounded-xl text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black transition-all shadow-md">Update PIN</button>
       </div>
     </div>
   </div>
@@ -74,8 +94,8 @@
       </div>
       <input type="hidden" id="pendingDeleteSlug" value="">
       <div class="flex gap-2 pt-1">
-        <button onclick="closeDeleteSalonModal()" class="flex-1 py-2.5 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
-        <button onclick="confirmDeleteSalon()" class="flex-1 py-2.5 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-black transition-all shadow-md">Yes, Delete</button>
+        <button onclick="playClickBeep(); closeDeleteSalonModal()" class="flex-1 py-2.5 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); confirmDeleteSalon()" class="flex-1 py-2.5 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-black transition-all shadow-md">Yes, Delete</button>
       </div>
     </div>
   </div>
@@ -92,13 +112,13 @@
       </div>
 
       <div class="flex items-center justify-center flex-wrap gap-2 w-full">
-        <button onclick="openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-amber-400 font-bold transition-all shadow-sm">
+        <button onclick="playClickBeep(); openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-amber-400 font-bold transition-all shadow-sm">
           🔑 Master PIN
         </button>
-        <button onclick="fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-neutral-300 font-bold transition-all shadow-sm">
+        <button onclick="playClickBeep(); fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-neutral-300 font-bold transition-all shadow-sm">
           ↻ Refresh
         </button>
-        <button onclick="adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-4 py-2.5 rounded-xl text-red-400 font-bold transition-all shadow-sm">
+        <button onclick="playClickBeep(); adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-4 py-2.5 rounded-xl text-red-400 font-bold transition-all shadow-sm">
           Logout 🔒
         </button>
       </div>
@@ -151,6 +171,26 @@
   </footer>
 
   <script>
+    function playClickBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
     const API_BASE = "https://luxe-salon-saas.onrender.com/api";
 
     function getAdminToken() {
@@ -280,12 +320,12 @@
           </td>
           <td class="py-3 px-3 text-right">
             <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-              <button onclick="resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">🔑 PIN</button>
-              <button onclick="toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap">
+              <button onclick="playClickBeep(); resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">🔑 PIN</button>
+              <button onclick="playClickBeep(); toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap">
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
               <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">Studio ↗</a>
-              <button onclick="deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2.5 py-1.5 rounded-lg text-[10px] whitespace-nowrap" title="Delete">🗑️</button>
+              <button onclick="playClickBeep(); deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2 py-1.5 rounded-lg text-[10px] whitespace-nowrap" title="Delete">🗑️</button>
             </div>
           </td>
         </tr>
@@ -307,12 +347,33 @@
       } catch (e) {}
     }
 
-    async function resetSalonPinPrompt(slug) {
-      const newPasscode = prompt(`Enter new 4-digit PIN for (${slug}):`);
-      if (!newPasscode || newPasscode.length < 4) return;
+    function resetSalonPinPrompt(slug) {
+      document.getElementById('pendingResetSlug').value = slug;
+      document.getElementById('modalNewSalonPin').value = '';
+      document.getElementById('resetPinErrMsg').innerText = '';
+      document.getElementById('resetPinSubTitle').innerText = `Enter new 4-digit PIN for (${slug}).`;
+      document.getElementById('resetSalonPinModal').classList.remove('hidden');
+    }
+
+    function closeResetSalonPinModal() {
+      document.getElementById('pendingResetSlug').value = '';
+      document.getElementById('resetSalonPinModal').classList.add('hidden');
+    }
+
+    async function confirmResetSalonPin() {
+      const slug = document.getElementById('pendingResetSlug').value;
+      const newPasscode = document.getElementById('modalNewSalonPin').value.trim();
+      const errBox = document.getElementById('resetPinErrMsg');
+      errBox.innerText = '';
+
+      if (!newPasscode || newPasscode.length < 4) {
+        errBox.innerText = 'PIN must be at least 4 digits.';
+        return;
+      }
+
       try {
         const token = getAdminToken();
-        await fetch(`${API_BASE}/admin/reset-salon-pin`, {
+        const res = await fetch(`${API_BASE}/admin/reset-salon-pin`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -320,8 +381,16 @@
           },
           body: JSON.stringify({ slug, newPasscode })
         });
-        alert('PIN reset successfully!');
-      } catch (e) {}
+        const data = await res.json();
+        if (res.ok && data.success) {
+          closeResetSalonPinModal();
+          alert('PIN reset successfully!');
+        } else {
+          errBox.innerText = data.error || 'Failed to reset PIN.';
+        }
+      } catch (e) {
+        errBox.innerText = 'Connection error.';
+      }
     }
 
     function deleteSalonPrompt(slug, shopName) {
@@ -354,12 +423,8 @@
       } catch (e) {}
     }
 
-    if (getAdminToken()) {
-      document.getElementById('adminAuthModal').classList.add('hidden');
-      fetchAllSalons();
-    } else {
-      document.getElementById('adminAuthModal').classList.remove('hidden');
-    }
+    localStorage.removeItem('luxe_super_admin_auth');
+    document.getElementById('adminAuthModal').classList.remove('hidden');
   </script>
 </body>
 </html>
