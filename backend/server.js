@@ -352,7 +352,7 @@ app.get('/api/:salon/state', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
+app.post('/api/:salon/toggle-online', async (req, res) => {
   try {
     const slug = req.params.salon;
     let targetSalon = await Salon.findOne({ slug });
