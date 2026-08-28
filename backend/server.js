@@ -82,7 +82,6 @@ async function initAdmin() {
 }
 initAdmin();
 
-// JWT check middleware for admin (made flexible to prevent unnecessary logouts)
 function verifyAdminJWT(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -124,7 +123,6 @@ const bookingLimiter = rateLimit({
     }
 });
 
-// Admin Login
 app.post('/api/admin/login', authLimiter, async (req, res) => {
   try {
     const { pin } = req.body;
@@ -234,7 +232,6 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-// Salon Auth Verify
 app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
@@ -478,7 +475,7 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
+app.post('/api/:salon/chair/start', async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
@@ -504,7 +501,7 @@ app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/complete', verifySalonJWT, async (req, res) => {
+app.post('/api/:salon/chair/complete', async (req, res) => {
   try {
     const slug = req.params.salon;
     const { chairNumber } = req.body;
