@@ -321,11 +321,13 @@
       }
       document.getElementById('authTenantSlugBadge').innerText = tenantSlug;
 
-      // Smart Session Check: Skip PIN screen if already logged in and not explicitly locked on this device
-      const sessionActive = localStorage.getItem(`${tenantSlug}_owner_session`);
+      const deviceId = localStorage.getItem(`${tenantSlug}_device_id`) || 'dev_' + Math.random().toString(36).substring(2);
+      localStorage.setItem(`${tenantSlug}_device_id`, deviceId);
+
+      const trustedDevice = localStorage.getItem(`${tenantSlug}_trusted_device_${deviceId}`) === 'true';
       const isLocked = localStorage.getItem(`${tenantSlug}_is_locked`) === 'true';
 
-      if (sessionActive && !isLocked) {
+      if (trustedDevice && !isLocked) {
         try {
           const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
           if (res.ok) {
@@ -413,8 +415,8 @@
           return;
         }
 
-        // Set active session and clear lock flag
-        localStorage.setItem(`${tenantSlug}_owner_session`, 'true');
+        const deviceId = localStorage.getItem(`${tenantSlug}_device_id`);
+        localStorage.setItem(`${tenantSlug}_trusted_device_${deviceId}`, 'true');
         localStorage.removeItem(`${tenantSlug}_is_locked`);
 
         document.getElementById('authScreen').classList.add('hidden');
@@ -432,8 +434,11 @@
     }
 
     function lockStudio() {
+      const deviceId = localStorage.getItem(`${tenantSlug}_device_id`);
+      if (deviceId) {
+        localStorage.removeItem(`${tenantSlug}_trusted_device_${deviceId}`);
+      }
       localStorage.setItem(`${tenantSlug}_is_locked`, 'true');
-      localStorage.removeItem(`${tenantSlug}_owner_session`);
       window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
