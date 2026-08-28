@@ -22,7 +22,7 @@
 </head>
 <body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
 
-  <!-- Launcher / Register Screen (Top Aligned & Mobile Keyboard Friendly) -->
+  <!-- Launcher / Register Screen -->
   <div class="max-w-md mx-auto w-full space-y-6 pt-6 sm:pt-12">
     <div class="text-center space-y-2">
       <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
@@ -36,7 +36,7 @@
 
     <!-- Register / Launch Card -->
     <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 modal-enter">
-      <form onsubmit="handleLaunch(event)" class="space-y-4">
+      <form onsubmit="playClickBeep(); handleLaunch(event)" class="space-y-4">
         <div>
           <label class="text-xs text-neutral-400 block mb-1.5 font-bold uppercase tracking-wider">Salon Name</label>
           <input id="salonNameInput" type="text" placeholder="e.g. Deluxe Salon" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 focus:border-amber-400 rounded-xl px-4 py-3 text-sm text-white focus:outline-none placeholder:text-neutral-600" required>
@@ -65,11 +65,35 @@
     </div>
   </div>
 
-  <footer class="w-full py-4 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6">
-    <span>© 2026 Smart Salon SaaS • Multi-Tenant Queue Engine</span>
+  <footer class="w-full py-5 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6 space-x-2">
+    <span>© 2026 Smart Salon SaaS</span>
+    <span>•</span>
+    <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms of Service</a>
+    <span>•</span>
+    <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy Policy</a>
   </footer>
 
   <script>
+    function playClickBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
     const API_BASE = "https://luxe-salon-saas.onrender.com/api";
 
     function updateSlug() {

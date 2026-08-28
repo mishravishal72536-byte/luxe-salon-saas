@@ -137,7 +137,16 @@
           <div id="servicesListContainer" class="grid grid-cols-1 gap-2 text-xs max-h-[320px] overflow-y-auto pr-1 custom-scroll"></div>
         </div>
 
-        <button onclick="playClickBeep(); bookToken()" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md">⚡ Get Live Token Pass</button>
+        <!-- Legal Terms Agreement Checkbox -->
+        <div class="flex items-start gap-2 pt-1">
+          <input type="checkbox" id="termsAgreementCheckbox" class="accent-amber-500 w-4 h-4 mt-0.5 rounded cursor-pointer">
+          <label for="termsAgreementCheckbox" class="text-[11px] text-slate-500 dark:text-neutral-400 cursor-pointer leading-tight">
+            By getting a token, you agree to our <a href="terms.html" target="_blank" class="text-amber-500 hover:underline font-semibold">Terms of Service</a> and <a href="privacy.html" target="_blank" class="text-amber-500 hover:underline font-semibold">Privacy Policy</a>.
+          </label>
+        </div>
+        <p id="termsErrorMsg" class="text-[10px] text-rose-500 hidden font-semibold">Please accept terms and privacy policy to continue.</p>
+
+        <button onclick="playClickBeep(); bookToken()" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-sm py-3 rounded-xl transition-all shadow-md mt-1">⚡ Get Live Token Pass</button>
       </div>
     </div>
 
@@ -269,11 +278,22 @@
     async function bookToken() {
       const nameInput = document.getElementById('cName');
       const myName = nameInput.value.trim();
+      const termsBox = document.getElementById('termsAgreementCheckbox');
+      const nameErr = document.getElementById('nameError');
+      const termsErr = document.getElementById('termsErrorMsg');
+
+      nameErr.classList.add('hidden');
+      termsErr.classList.add('hidden');
+
       if (!myName) {
-        document.getElementById('nameError').classList.remove('hidden');
+        nameErr.classList.remove('hidden');
         nameInput.focus(); return;
       }
-      document.getElementById('nameError').classList.add('hidden');
+
+      if (!termsBox.checked) {
+        termsErr.classList.remove('hidden');
+        termsBox.focus(); return;
+      }
 
       let services = [], totalMins = 0, totalPrice = 0;
       document.querySelectorAll('.s-chk:checked').forEach(c => {
@@ -427,6 +447,7 @@
     function bookAnother() {
       myTokenNumber = null; timerRunning = false; alertSentForThisTrust = null;
       document.getElementById('cName').value = '';
+      document.getElementById('termsAgreementCheckbox').checked = false;
       document.getElementById('myTokenCard').classList.add('hidden');
       document.getElementById('shopClosedBanner').classList.add('hidden');
       document.getElementById('bookingForm').classList.add('hidden');
