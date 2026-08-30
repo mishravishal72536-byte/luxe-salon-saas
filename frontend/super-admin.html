@@ -26,8 +26,8 @@
 
 <body class="bg-[#09090b] text-neutral-100 min-h-screen p-3 sm:p-5 md:p-6 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
 
-  <!-- Super Admin Auth Modal -->
-  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50 overflow-y-auto">
+  <!-- Super Admin Auth Modal (Top Aligned) -->
+  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-10 sm:pt-14 p-4 z-50 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl modal-enter">
       <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">🛡️</div>
       <div>
@@ -48,7 +48,7 @@
   </div>
 
   <!-- Change Master PIN Modal -->
-  <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 modal-enter">
       <h3 class="text-xs font-black text-amber-400 uppercase tracking-wider">Change Master Admin PIN</h3>
       <div class="space-y-2.5 text-left">
@@ -69,8 +69,8 @@
     </div>
   </div>
 
-  <!-- Custom Reset Salon PIN Modal -->
-  <div id="resetSalonPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <!-- Reset Salon PIN Modal -->
+  <div id="resetSalonPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 modal-enter">
       <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold">🔑</div>
       <div class="text-center">
@@ -90,7 +90,7 @@
   </div>
 
   <!-- Custom Delete Confirmation Modal -->
-  <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 text-center space-y-3 shadow-2xl modal-enter">
       <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
       <div>
