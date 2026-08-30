@@ -12,9 +12,7 @@
       theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b', dark: '#d97706', light: '#fbbf24' } } } }
     }
   </script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -26,140 +24,147 @@
   </style>
 </head>
 
-<body class="bg-[#09090b] text-neutral-100 min-h-screen p-3 sm:p-6 md:p-8 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
+<body class="bg-[#09090b] text-neutral-100 min-h-screen p-3 sm:p-5 md:p-6 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
 
-  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start sm:items-center justify-center pt-8 sm:pt-12 p-3 sm:p-4 z-50 overflow-y-auto">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow-2xl modal-enter my-8">
-      <div class="w-14 h-14 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">🛡️</div>
+  <!-- Super Admin Auth Modal -->
+  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">🛡️</div>
       <div>
-        <h2 class="text-xl font-black text-white tracking-tight">Super Admin Cockpit</h2>
-        <p class="text-xs text-neutral-400 mt-1">Enter Master Admin Passcode to access fleet control.</p>
+        <h2 class="text-base sm:text-lg font-black text-white tracking-tight">Super Admin Cockpit</h2>
+        <p class="text-[11px] text-neutral-400 mt-0.5">Enter Master Passcode to access fleet control.</p>
       </div>
 
       <form onsubmit="playClickBeep(); handleAdminLogin(event)" class="space-y-3 text-left">
         <div>
-          <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-xl font-mono text-amber-400 focus:border-amber-400 rounded-2xl px-4 py-3.5 focus:outline-none placeholder:text-neutral-600 shadow-inner" required>
+          <input id="adminMasterPinInput" type="password" maxlength="12" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-3 py-2.5 focus:outline-none placeholder:text-neutral-600 shadow-inner" required>
         </div>
-        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs py-3.5 rounded-xl transition-all shadow-lg cursor-pointer tracking-wide uppercase">
+        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs py-3 rounded-xl transition-all shadow-lg cursor-pointer tracking-wide uppercase">
           Authenticate Cockpit ➔
         </button>
-        <p id="adminLoginErr" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
+        <p id="adminLoginErr" class="text-[11px] text-red-400 font-semibold min-h-[14px] text-center"></p>
       </form>
     </div>
   </div>
 
+  <!-- Change Master PIN Modal -->
   <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 modal-enter">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 modal-enter">
       <h3 class="text-xs font-black text-amber-400 uppercase tracking-wider">Change Master Admin PIN</h3>
-      <div class="space-y-3 text-left">
+      <div class="space-y-2.5 text-left">
         <div>
-          <label class="text-[11px] text-neutral-400 block mb-1 font-semibold">Current PIN</label>
-          <input id="currAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-400">
+          <label class="text-[10px] text-neutral-400 block mb-1 font-semibold">Current PIN</label>
+          <input id="currAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
         </div>
         <div>
-          <label class="text-[11px] text-neutral-400 block mb-1 font-semibold">New PIN (Min 4 digits)</label>
-          <input id="newAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-400">
+          <label class="text-[10px] text-neutral-400 block mb-1 font-semibold">New PIN (Min 4 digits)</label>
+          <input id="newAdminPin" type="password" maxlength="12" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
         </div>
       </div>
-      <p id="changeAdminPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px]"></p>
+      <p id="changeAdminPinErrMsg" class="text-[10px] text-red-400 font-semibold min-h-[14px]"></p>
       <div class="flex gap-2 pt-1">
-        <button onclick="playClickBeep(); document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2.5 text-xs bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 font-bold transition-all">Cancel</button>
-        <button onclick="playClickBeep(); submitAdminPinChange()" class="flex-1 py-2.5 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-md">Save PIN</button>
+        <button onclick="playClickBeep(); document.getElementById('changeAdminPinModal').classList.add('hidden')" class="flex-1 py-2 text-xs bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); submitAdminPinChange()" class="flex-1 py-2 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-md">Save PIN</button>
       </div>
     </div>
   </div>
 
+  <!-- Custom Reset Salon PIN Modal -->
   <div id="resetSalonPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 modal-enter">
-      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">🔑</div>
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 modal-enter">
+      <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold">🔑</div>
       <div class="text-center">
-        <h3 class="text-sm font-black text-white uppercase tracking-wider">Reset Salon PIN</h3>
-        <p id="resetPinSubTitle" class="text-xs text-neutral-400 mt-1">Enter new 4-digit PIN for salon.</p>
+        <h3 class="text-xs font-black text-white uppercase tracking-wider">Reset Salon PIN</h3>
+        <p id="resetPinSubTitle" class="text-[11px] text-neutral-400 mt-0.5">Enter new PIN for salon.</p>
       </div>
       <input type="hidden" id="pendingResetSlug" value="">
       <div>
-        <input id="modalNewSalonPin" type="password" maxlength="8" placeholder="Enter new PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-lg font-mono text-amber-400 focus:border-amber-400 rounded-xl px-4 py-3 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
+        <input id="modalNewSalonPin" type="password" maxlength="8" placeholder="Enter new PIN" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-base font-mono text-amber-400 focus:border-amber-400 rounded-xl px-3 py-2.5 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600">
       </div>
-      <p id="resetPinErrMsg" class="text-xs text-red-400 font-semibold min-h-[14px] text-center"></p>
+      <p id="resetPinErrMsg" class="text-[10px] text-red-400 font-semibold min-h-[14px] text-center"></p>
       <div class="flex gap-2 pt-1">
-        <button onclick="playClickBeep(); closeResetSalonPinModal()" class="flex-1 py-2.5 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
-        <button onclick="playClickBeep(); confirmResetSalonPin()" class="flex-1 py-2.5 rounded-xl text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black transition-all shadow-md">Update PIN</button>
+        <button onclick="playClickBeep(); closeResetSalonPinModal()" class="flex-1 py-2 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); confirmResetSalonPin()" class="flex-1 py-2 rounded-xl text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black transition-all shadow-md">Update PIN</button>
       </div>
     </div>
   </div>
 
+  <!-- Custom Delete Confirmation Modal -->
   <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl modal-enter">
-      <div class="w-12 h-12 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold shadow-inner">🗑️</div>
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 text-center space-y-3 shadow-2xl modal-enter">
+      <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
       <div>
-        <h3 class="text-sm font-black text-white uppercase tracking-wider">Delete Salon?</h3>
-        <p id="deleteSalonMsg" class="text-xs text-neutral-400 mt-1">This will permanently disconnect the server and terminate active sessions.</p>
+        <h3 class="text-xs font-black text-white uppercase tracking-wider">Delete Salon?</h3>
+        <p id="deleteSalonMsg" class="text-[11px] text-neutral-400 mt-0.5">This will permanently disconnect server and terminate sessions.</p>
       </div>
       <input type="hidden" id="pendingDeleteSlug" value="">
       <div class="flex gap-2 pt-1">
-        <button onclick="playClickBeep(); closeDeleteSalonModal()" class="flex-1 py-2.5 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
-        <button onclick="playClickBeep(); confirmDeleteSalon()" class="flex-1 py-2.5 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-black transition-all shadow-md">Yes, Delete</button>
+        <button onclick="playClickBeep(); closeDeleteSalonModal()" class="flex-1 py-2 rounded-xl text-xs bg-neutral-800 text-neutral-300 font-bold transition-all">Cancel</button>
+        <button onclick="playClickBeep(); confirmDeleteSalon()" class="flex-1 py-2 rounded-xl text-xs bg-red-500 hover:bg-red-400 text-white font-black transition-all shadow-md">Yes, Delete</button>
       </div>
     </div>
   </div>
 
-  <div class="max-w-6xl mx-auto w-full space-y-4 sm:space-y-6">
-    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-6 rounded-3xl shadow-xl flex flex-col items-center justify-center text-center gap-4">
-      <div class="space-y-1">
-        <h1 class="text-lg sm:text-xl font-black text-amber-400 tracking-tight flex items-center justify-center gap-2 uppercase">
+  <!-- Main Cockpit Container -->
+  <div class="max-w-5xl mx-auto w-full space-y-3 sm:space-y-4">
+    <div class="bg-neutral-900/90 border border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-xl flex flex-col items-center justify-center text-center gap-3">
+      <div class="space-y-0.5">
+        <h1 class="text-base sm:text-lg font-black text-amber-400 tracking-tight flex items-center justify-center gap-1.5 uppercase">
           <span>⚡</span> Super Admin Cockpit
         </h1>
-        <p class="text-xs text-neutral-400">Multi-Tenant Fleet Tracker & Instant Halt Control</p>
+        <p class="text-[11px] text-neutral-400">Multi-Tenant Fleet Tracker & Instant Halt Control</p>
       </div>
 
-      <div class="flex items-center justify-center flex-wrap gap-2 w-full">
-        <button onclick="playClickBeep(); openChangeAdminPinModal()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-amber-400 font-bold transition-all shadow-sm">
+      <div class="flex items-center justify-center flex-wrap gap-1.5 w-full">
+        <button onclick="playClickBeep(); openChangeAdminPinModal()" class="text-[11px] bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3 py-1.5 rounded-xl text-amber-400 font-bold transition-all">
           🔑 Master PIN
         </button>
-        <button onclick="playClickBeep(); fetchAllSalons()" class="text-xs bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-4 py-2.5 rounded-xl text-neutral-300 font-bold transition-all shadow-sm">
+        <button onclick="playClickBeep(); fetchAllSalons()" class="text-[11px] bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 px-3 py-1.5 rounded-xl text-neutral-300 font-bold transition-all">
           ↻ Refresh
         </button>
-        <button onclick="playClickBeep(); adminLogout()" class="text-xs bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-4 py-2.5 rounded-xl text-red-400 font-bold transition-all shadow-sm">
+        <button onclick="playClickBeep(); adminLogout()" class="text-[11px] bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 px-3 py-1.5 rounded-xl text-red-400 font-bold transition-all">
           Logout 🔒
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-lg backdrop-blur-md">
-        <span class="text-[11px] text-neutral-400 uppercase font-bold tracking-widest">Total Salons</span>
-        <div id="statTotalSalons" class="text-3xl font-black text-white font-mono-num mt-1">0</div>
+    <!-- Analytics Cards -->
+    <div class="grid grid-cols-3 gap-2">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-2xl shadow-md">
+        <span class="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
+        <div id="statTotalSalons" class="text-xl sm:text-2xl font-black text-white font-mono-num mt-0.5">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-lg backdrop-blur-md">
-        <span class="text-[11px] text-neutral-400 uppercase font-bold tracking-widest">Active & Running</span>
-        <div id="statActiveSalons" class="text-3xl font-black text-emerald-400 font-mono-num mt-1">0</div>
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-2xl shadow-md">
+        <span class="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Active</span>
+        <div id="statActiveSalons" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono-num mt-0.5">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-5 rounded-3xl shadow-lg backdrop-blur-md">
-        <span class="text-[11px] text-neutral-400 uppercase font-bold tracking-widest">Halted / Frozen</span>
-        <div id="statHaltedSalons" class="text-3xl font-black text-red-400 font-mono-num mt-1">0</div>
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-2xl shadow-md">
+        <span class="text-[9px] sm:text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Halted</span>
+        <div id="statHaltedSalons" class="text-xl sm:text-2xl font-black text-red-400 font-mono-num mt-0.5">0</div>
       </div>
     </div>
 
-    <div class="bg-neutral-900/80 border border-neutral-800 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
-      <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
-        <h2 class="text-xs font-black text-neutral-300 uppercase tracking-widest">All Managed Salons Fleet</h2>
-        <span class="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 font-bold">Secure Gateway</span>
+    <!-- Salons Table Section -->
+    <div class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-3">
+      <div class="flex justify-between items-center border-b border-neutral-800 pb-2.5">
+        <h2 class="text-xs font-black text-neutral-300 uppercase tracking-wider">Fleet Registry</h2>
+        <span class="text-[9px] text-amber-400 font-mono bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-bold">Live Gateway</span>
       </div>
 
-      <div class="overflow-x-auto pb-2">
-        <table class="w-full text-left border-collapse min-w-[750px]">
+      <div class="overflow-x-auto pb-1">
+        <table class="w-full text-left border-collapse min-w-[550px]">
           <thead>
-            <tr class="border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-widest">
-              <th class="py-3 px-3">Salon Name & Slug</th>
-              <th class="py-3 px-3">Onboard Date</th>
-              <th class="py-3 px-3">Running Since</th>
-              <th class="py-3 px-3">Status</th>
-              <th class="py-3 px-3 text-right">Admin Actions</th>
+            <tr class="border-b border-neutral-800 text-[9px] text-neutral-400 uppercase tracking-widest">
+              <th class="py-2 px-2.5">Salon</th>
+              <th class="py-2 px-2.5">Onboarded</th>
+              <th class="py-2 px-2.5">Age</th>
+              <th class="py-2 px-2.5">Status</th>
+              <th class="py-2 px-2.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody id="salonsTableBody" class="divide-y divide-neutral-800/60 text-xs">
             <tr>
-              <td colspan="5" class="text-center py-8 text-neutral-500">Loading managed salons...</td>
+              <td colspan="5" class="text-center py-6 text-neutral-500 text-xs">Loading managed salons...</td>
             </tr>
           </tbody>
         </table>
@@ -167,12 +172,12 @@
     </div>
   </div>
 
-  <footer class="w-full py-5 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-8 space-x-2">
-    <span>🔒 Passcode Protected Cockpit • 2026 Smart Salon SaaS</span>
+  <footer class="w-full py-4 text-center text-[10px] text-neutral-500 border-t border-neutral-900 mt-6 space-x-2">
+    <span>© 2026 Smart Salon SaaS</span>
     <span>•</span>
-    <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms of Service</a>
+    <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms</a>
     <span>•</span>
-    <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy Policy</a>
+    <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy</a>
   </footer>
 
   <script>
@@ -304,35 +309,35 @@
 
       const tbody = document.getElementById('salonsTableBody');
       if (total === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-neutral-500">No salons onboarded yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-neutral-500 text-xs">No salons onboarded yet.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = salons.map(s => `
         <tr class="hover:bg-neutral-800/30 transition-all">
-          <td class="py-3 px-3">
-            <span class="font-bold text-white block uppercase text-xs">${s.shopName}</span>
-            <span class="text-[10px] text-amber-400 font-mono">salon=${s.slug}</span>
+          <td class="py-2.5 px-2.5">
+            <span class="font-bold text-white block uppercase text-[11px]">${s.shopName}</span>
+            <span class="text-[9px] text-amber-400 font-mono">salon=${s.slug}</span>
           </td>
-          <td class="py-3 px-3 text-neutral-400 font-mono text-[11px]">
+          <td class="py-2.5 px-2.5 text-neutral-400 font-mono text-[10px]">
             ${new Date(s.onboardedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
           </td>
-          <td class="py-3 px-3 text-emerald-400 font-bold font-mono-num text-[11px]">
+          <td class="py-2.5 px-2.5 text-emerald-400 font-bold font-mono-num text-[10px]">
             ${s.daysOnboarded}D
           </td>
-          <td class="py-3 px-3">
-            <span class="px-2.5 py-1 rounded-md text-[10px] font-black ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
+          <td class="py-2.5 px-2.5">
+            <span class="px-2 py-0.5 rounded text-[9px] font-black ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
               ${s.isHalted ? 'HALTED' : 'ACTIVE'}
             </span>
           </td>
-          <td class="py-3 px-3 text-right">
-            <div class="flex items-center justify-end gap-1.5 flex-nowrap">
-              <button onclick="playClickBeep(); resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">🔑 PIN</button>
-              <button onclick="playClickBeep(); toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1.5 rounded-lg text-[10px] font-black whitespace-nowrap">
+          <td class="py-2.5 px-2.5 text-right">
+            <div class="flex items-center justify-end gap-1 flex-nowrap">
+              <button onclick="playClickBeep(); resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-1.5 py-1 rounded-md text-[9px] font-bold">🔑 PIN</button>
+              <button onclick="playClickBeep(); toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-1.5 py-1 rounded-md text-[9px] font-black">
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
-              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1.5 rounded-lg text-[10px] font-bold whitespace-nowrap">Studio ↗</a>
-              <button onclick="playClickBeep(); deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2 py-1.5 rounded-lg text-[10px] whitespace-nowrap" title="Delete">🗑️</button>
+              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-1.5 py-1 rounded-md text-[9px] font-bold">Studio ↗</a>
+              <button onclick="playClickBeep(); deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-1 rounded-md text-[9px]" title="Delete">🗑️</button>
             </div>
           </td>
         </tr>
@@ -358,7 +363,7 @@
       document.getElementById('pendingResetSlug').value = slug;
       document.getElementById('modalNewSalonPin').value = '';
       document.getElementById('resetPinErrMsg').innerText = '';
-      document.getElementById('resetPinSubTitle').innerText = `Enter new 4-digit PIN for (${slug}).`;
+      document.getElementById('resetPinSubTitle').innerText = `Enter new PIN for (${slug}).`;
       document.getElementById('resetSalonPinModal').classList.remove('hidden');
     }
 
@@ -402,7 +407,7 @@
 
     function deleteSalonPrompt(slug, shopName) {
       document.getElementById('pendingDeleteSlug').value = slug;
-      document.getElementById('deleteSalonMsg').innerText = `Delete salon '${shopName}'? This will permanently disconnect the server and terminate active sessions.`;
+      document.getElementById('deleteSalonMsg').innerText = `Delete salon '${shopName}'? This will disconnect the server.`;
       document.getElementById('deleteSalonModal').classList.remove('hidden');
     }
 

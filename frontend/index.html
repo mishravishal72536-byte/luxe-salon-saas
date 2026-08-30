@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Multi-Tenant Salon SaaS - Smart Queue Launcher</title>
+  <title>Smart Queue Launcher - Luxe Salon SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -20,55 +20,55 @@
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   </style>
 </head>
-<body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
+<body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 flex flex-col justify-between overflow-y-auto">
 
-  <div class="max-w-md mx-auto w-full space-y-6 pt-6 sm:pt-12">
-    <div class="text-center space-y-2">
-      <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
+  <div class="max-w-xs sm:max-w-sm mx-auto w-full space-y-4 pt-4 sm:pt-8 my-auto">
+    <div class="text-center space-y-1.5">
+      <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-widest">
         Multi-Tenant Salon SaaS
       </div>
-      <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">Smart Salon System</h1>
-      <p class="text-xs sm:text-sm text-neutral-400 max-w-sm mx-auto">
-        Enter your salon name and security PIN below to register, launch or sign in to your digital queue and counter system.
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Smart Salon System</h1>
+      <p class="text-[11px] text-neutral-400 max-w-xs mx-auto leading-relaxed">
+        Enter your salon name and security PIN to register, launch or sign in to your dashboard.
       </p>
     </div>
 
-    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 modal-enter">
-      <form onsubmit="playClickBeep(); handleLaunch(event)" class="space-y-4">
+    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-3.5 modal-enter">
+      <form onsubmit="playClickBeep(); handleLaunch(event)" class="space-y-3">
         <div>
-          <label class="text-xs text-neutral-400 block mb-1.5 font-bold uppercase tracking-wider">Salon Name</label>
-          <input id="salonNameInput" type="text" placeholder="e.g. Deluxe Salon" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 focus:border-amber-400 rounded-xl px-4 py-3 text-sm text-white focus:outline-none placeholder:text-neutral-600" required>
+          <label class="text-[10px] text-neutral-400 block mb-1 font-bold uppercase tracking-wider">Salon Name</label>
+          <input id="salonNameInput" type="text" placeholder="e.g. Deluxe Salon" oninput="updateSlug()" class="w-full bg-neutral-950 border border-neutral-800 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none placeholder:text-neutral-600" required>
         </div>
 
         <div>
-          <label class="text-xs text-neutral-400 block mb-1.5 font-bold uppercase tracking-wider">Security PIN (Min 4 Digits)</label>
-          <input id="salonPinInput" type="password" maxlength="8" placeholder="Enter PIN" class="w-full bg-neutral-950 border border-neutral-800 focus:border-amber-400 rounded-xl px-4 py-3 text-center tracking-widest text-lg font-mono text-amber-400 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
+          <label class="text-[10px] text-neutral-400 block mb-1 font-bold uppercase tracking-wider">Security PIN (Min 4 Digits)</label>
+          <input id="salonPinInput" type="password" maxlength="8" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-center tracking-widest text-base font-mono text-amber-400 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
         </div>
 
-        <div class="text-[11px] text-neutral-500 font-mono">
+        <div class="text-[10px] text-neutral-500 font-mono">
           System ID Slug: <span id="slugPreview" class="text-amber-400 font-bold">--</span>
         </div>
 
-        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-sm py-3.5 rounded-xl transition-all shadow-lg cursor-pointer">
+        <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs py-3 rounded-xl transition-all shadow-lg cursor-pointer">
           🚀 Launch / Register My Salon →
         </button>
-        <p id="launcherError" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
+        <p id="launcherError" class="text-[11px] text-red-400 font-semibold min-h-[14px] text-center"></p>
       </form>
     </div>
 
-    <div class="text-center pb-4">
-      <a href="super-admin.html" class="text-xs text-neutral-500 hover:text-amber-400 font-semibold transition-all">
+    <div class="text-center pt-1">
+      <a href="super-admin.html" class="text-[11px] text-neutral-500 hover:text-amber-400 font-semibold transition-all">
         🛡️ Access Super Admin Cockpit
       </a>
     </div>
   </div>
 
-  <footer class="w-full py-5 text-center text-xs text-neutral-500 border-t border-neutral-900 mt-6 space-x-2">
+  <footer class="w-full py-3 text-center text-[10px] text-neutral-500 border-t border-neutral-900 mt-4 space-x-2">
     <span>© 2026 Smart Salon SaaS</span>
     <span>•</span>
-    <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms of Service</a>
+    <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms</a>
     <span>•</span>
-    <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy Policy</a>
+    <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy</a>
   </footer>
 
   <script>
@@ -138,10 +138,10 @@
           return;
         }
 
-        try { confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } }); } catch(e){}
+        try { confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } }); } catch(e){}
         setTimeout(() => {
           window.location.href = `owner.html?salon=${slug}`;
-        }, 500);
+        }, 400);
 
       } catch (e) {
         errBox.innerText = 'Connection error. Please try again.';
