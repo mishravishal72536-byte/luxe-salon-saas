@@ -30,7 +30,8 @@
 
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-2.5 sm:p-4 md:p-6 flex flex-col justify-between transition-colors duration-200">
 
-  <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 z-40 overflow-y-auto">
+  <!-- Owner Studio Sign In Modal (Top-Aligned) -->
+  <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-8 sm:pt-12 p-4 z-40 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 sm:p-6 text-center space-y-3.5 shadow-2xl modal-enter">
       <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl">🔐</div>
       <div>
@@ -82,7 +83,7 @@
     </div>
   </div>
 
-  <div id="changePinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div id="changePinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-10 sm:pt-14 p-4 z-50">
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 modal-enter">
       <h3 class="text-xs font-extrabold text-amber-500 uppercase">Change Studio PIN</h3>
       <div class="space-y-2.5 text-left">
@@ -103,7 +104,7 @@
     </div>
   </div>
 
-  <div id="resetDayModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div id="resetDayModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl space-y-3 text-center modal-enter">
       <div class="w-10 h-10 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">↺</div>
       <div>
@@ -117,7 +118,7 @@
     </div>
   </div>
 
-  <div id="deleteServiceModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+  <div id="deleteServiceModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl space-y-3 text-center modal-enter">
       <div class="w-10 h-10 bg-red-500/15 border border-red-500/30 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold">🗑️</div>
       <div>
