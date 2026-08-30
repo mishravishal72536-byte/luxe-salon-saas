@@ -22,7 +22,6 @@
 </head>
 <body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
 
-  <!-- Launcher / Register Screen -->
   <div class="max-w-md mx-auto w-full space-y-6 pt-6 sm:pt-12">
     <div class="text-center space-y-2">
       <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">
@@ -34,7 +33,6 @@
       </p>
     </div>
 
-    <!-- Register / Launch Card -->
     <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4 modal-enter">
       <form onsubmit="playClickBeep(); handleLaunch(event)" class="space-y-4">
         <div>
@@ -94,9 +92,9 @@
       } catch (e) {}
     }
 
-  const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-  ? 'http://localhost:5000/api'
-  : 'https://luxe-salon-saas.onrender.com/api';
+    const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+      ? 'http://localhost:5000/api'
+      : 'https://luxe-salon-saas.onrender.com/api';
 
     function updateSlug() {
       const val = document.getElementById('salonNameInput').value.trim();

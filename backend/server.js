@@ -109,21 +109,30 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: { success: false, error: 'Too many requests from this IP, please try again later.' }
+// 5 minutes window with max 4 failed login attempts
+const loginBruteLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 4,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ 
+      success: false, 
+      error: 'Too many incorrect PIN attempts. Please wait 5 minutes before trying again.' 
+    });
+  }
 });
 
 const bookingLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 30,
-    handler: (req, res) => {
-        res.status(429).json({ success: false, error: 'Aapne is network se bohot saare tokens generate kar liye hain.' });
-    }
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  handler: (req, res) => {
+    res.status(429).json({ success: false, error: 'Aapne is network se bohot saare tokens generate kar liye hain.' });
+  }
 });
 
-app.post('/api/admin/login', authLimiter, async (req, res) => {
+app.post('/api/admin/login', loginBruteLimiter, async (req, res) => {
   try {
     const { pin } = req.body;
     if (!pin) return res.status(400).json({ success: false, error: 'PIN is required.' });
@@ -232,7 +241,7 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
+app.post('/api/:salon/auth/verify', loginBruteLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
     let targetSalon = await Salon.findOne({ slug });
@@ -242,7 +251,7 @@ app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
     }
 
     if (targetSalon.isHalted) {
-      return res.json({ status: 'HALTED', message: targetSalon.haltReason });
+      return res.status(403).json({ status: 'HALTED', message: targetSalon.haltReason });
     }
     if (!targetSalon.passcodeHash) {
       return res.json({ status: 'FIRST_TIME' });
@@ -265,7 +274,7 @@ app.post('/api/:salon/auth/verify', authLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/auth/set-passcode', authLimiter, async (req, res) => {
+app.post('/api/:salon/auth/set-passcode', async (req, res) => {
   try {
     const slug = req.params.salon;
     const { newPasscode, shopName } = req.body;
