@@ -109,35 +109,43 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-// In-memory strictly per-account tracker (IP completely ignored)
-const failedAttemptStore = {};
-function checkAccountBruteGuard(key) {
-  const record = failedAttemptStore[key];
+// ---------------------------------------------------------
+// Per-Device & Per-Account Brute Force Protection Engine
+// ---------------------------------------------------------
+const deviceAttemptStore = {};
+
+function getClientFingerprint(req, targetEntity) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
+  const userAgent = req.headers['user-agent'] || 'unknown_agent';
+  return `${targetEntity}_${ip}_${Buffer.from(userAgent).toString('base64').substring(0, 15)}`;
+}
+
+function checkDeviceBruteGuard(fingerprint) {
+  const record = deviceAttemptStore[fingerprint];
   if (!record) return { locked: false };
   if (Date.now() > record.unlockAt) {
-    delete failedAttemptStore[key];
+    delete deviceAttemptStore[fingerprint];
     return { locked: false };
   }
   const remainingMins = Math.ceil((record.unlockAt - Date.now()) / 60000);
   return { locked: true, remainingMins };
 }
 
-function recordFailedAttempt(key) {
-  if (!failedAttemptStore[key]) {
-    failedAttemptStore[key] = { count: 1, unlockAt: Date.now() + 5 * 60 * 1000 };
+function recordDeviceFailedAttempt(fingerprint) {
+  if (!deviceAttemptStore[fingerprint]) {
+    deviceAttemptStore[fingerprint] = { count: 1, unlockAt: Date.now() + 5 * 60 * 1000 };
   } else {
-    failedAttemptStore[key].count += 1;
-    if (failedAttemptStore[key].count >= 4) {
-      failedAttemptStore[key].unlockAt = Date.now() + 5 * 60 * 1000;
+    deviceAttemptStore[fingerprint].count += 1;
+    if (deviceAttemptStore[fingerprint].count >= 4) {
+      deviceAttemptStore[fingerprint].unlockAt = Date.now() + 5 * 60 * 1000;
     }
   }
 }
 
-function clearFailedAttempts(key) {
-  delete failedAttemptStore[key];
+function clearDeviceAttempts(fingerprint) {
+  delete deviceAttemptStore[fingerprint];
 }
 
-// Only mild rate limiter for bookings to prevent spamming queue generation
 const bookingLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 100,
@@ -146,13 +154,15 @@ const bookingLimiter = rateLimit({
   }
 });
 
+// Super Admin Login with Per-Device 4-Trial 5-Min Timeout Guard
 app.post('/api/admin/login', async (req, res) => {
   try {
-    const guard = checkAccountBruteGuard('super_admin_master');
+    const fingerprint = getClientFingerprint(req, 'super_admin');
+    const guard = checkDeviceBruteGuard(fingerprint);
     if (guard.locked) {
       return res.status(429).json({ 
         success: false, 
-        error: `Too many incorrect Master PIN attempts. Please wait ${guard.remainingMins} minute(s) before trying again.` 
+        error: `Too many incorrect attempts from this device. Please wait ${guard.remainingMins} minute(s) before trying again.` 
       });
     }
 
@@ -168,11 +178,11 @@ app.post('/api/admin/login', async (req, res) => {
 
     const matched = await bcrypt.compare(pin, adminDoc.masterPinHash);
     if (!matched) {
-      recordFailedAttempt('super_admin_master');
+      recordDeviceFailedAttempt(fingerprint);
       return res.status(401).json({ success: false, error: 'Invalid Master PIN.' });
     }
 
-    clearFailedAttempts('super_admin_master');
+    clearDeviceAttempts(fingerprint);
     const token = jwt.sign({ role: 'superadmin' }, JWT_SECRET, { expiresIn: '24h' });
     return res.json({ success: true, token });
   } catch (err) {
@@ -248,7 +258,6 @@ app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
-    clearFailedAttempts(`salon_${slug}`);
     res.json({ success: true, message: `PIN reset successfully for ${slug}` });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -260,22 +269,22 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
     const { slug } = req.body;
     const delResult = await Salon.findOneAndDelete({ slug });
     if (!delResult) return res.status(404).json({ success: false, error: 'Salon not found.' });
-    clearFailedAttempts(`salon_${slug}`);
     res.json({ success: true, message: 'Salon deleted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
+// Salon Owner Login with Per-Device 4-Trial 5-Min Timeout Guard
 app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
-    const guardKey = `salon_${slug}`;
-    const guard = checkAccountBruteGuard(guardKey);
+    const fingerprint = getClientFingerprint(req, `salon_${slug}`);
+    const guard = checkDeviceBruteGuard(fingerprint);
     if (guard.locked) {
       return res.status(429).json({ 
         success: false, 
-        error: `Too many incorrect PIN attempts for this salon. Please wait ${guard.remainingMins} minute(s).` 
+        error: `Too many incorrect attempts from this device. Please wait ${guard.remainingMins} minute(s).` 
       });
     }
 
@@ -299,11 +308,11 @@ app.post('/api/:salon/auth/verify', async (req, res) => {
 
     const matched = await bcrypt.compare(passcode, targetSalon.passcodeHash);
     if (matched) {
-      clearFailedAttempts(guardKey);
+      clearDeviceAttempts(fingerprint);
       const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
       return res.json({ authenticated: true, success: true, token });
     } else {
-      recordFailedAttempt(guardKey);
+      recordDeviceFailedAttempt(fingerprint);
       return res.status(401).json({ authenticated: false, success: false, error: 'Incorrect PIN.' });
     }
   } catch (err) {
@@ -338,7 +347,6 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
-    clearFailedAttempts(`salon_${slug}`);
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
@@ -366,7 +374,6 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
-    clearFailedAttempts(`salon_${slug}`);
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
@@ -523,9 +530,7 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/start', verifySalonJWT, async (err, req, res, next) => {
-  // safe fallback
-  if (typeof req === 'undefined') { req = err; }
+app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
