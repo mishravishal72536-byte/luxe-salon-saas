@@ -109,19 +109,33 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-const loginBruteLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: 4,
-  skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    res.status(429).json({ 
-      success: false, 
-      error: 'Too many incorrect PIN attempts. Please wait 5 minutes before trying again.' 
-    });
+// In-memory tracker for failed attempts per specific target/account instead of blinding entire Wi-Fi IP
+const failedAttemptStore = {};
+function checkAccountBruteGuard(key) {
+  const record = failedAttemptStore[key];
+  if (!record) return { locked: false };
+  if (Date.now() > record.unlockAt) {
+    delete failedAttemptStore[key];
+    return { locked: false };
   }
-});
+  const remainingMins = Math.ceil((record.unlockAt - Date.now()) / 60000);
+  return { locked: true, remainingMins };
+}
+
+function recordFailedAttempt(key) {
+  if (!failedAttemptStore[key]) {
+    failedAttemptStore[key] = { count: 1, unlockAt: Date.now() + 5 * 60 * 1000 };
+  } else {
+    failedAttemptStore[key].count += 1;
+    if (failedAttemptStore[key].count >= 4) {
+      failedAttemptStore[key].unlockAt = Date.now() + 5 * 60 * 1000;
+    }
+  }
+}
+
+function clearFailedAttempts(key) {
+  delete failedAttemptStore[key];
+}
 
 const bookingLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -131,8 +145,16 @@ const bookingLimiter = rateLimit({
   }
 });
 
-app.post('/api/admin/login', loginBruteLimiter, async (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   try {
+    const guard = checkAccountBruteGuard('super_admin_master');
+    if (guard.locked) {
+      return res.status(429).json({ 
+        success: false, 
+        error: `Too many incorrect Master PIN attempts. Please wait ${guard.remainingMins} minute(s) before trying again.` 
+      });
+    }
+
     const { pin } = req.body;
     if (!pin) return res.status(400).json({ success: false, error: 'PIN is required.' });
 
@@ -145,9 +167,11 @@ app.post('/api/admin/login', loginBruteLimiter, async (req, res) => {
 
     const matched = await bcrypt.compare(pin, adminDoc.masterPinHash);
     if (!matched) {
+      recordFailedAttempt('super_admin_master');
       return res.status(401).json({ success: false, error: 'Invalid Master PIN.' });
     }
 
+    clearFailedAttempts('super_admin_master');
     const token = jwt.sign({ role: 'superadmin' }, JWT_SECRET, { expiresIn: '24h' });
     return res.json({ success: true, token });
   } catch (err) {
@@ -223,6 +247,7 @@ app.post('/api/admin/reset-salon-pin', verifyAdminJWT, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
+    clearFailedAttempts(`salon_${slug}`);
     res.json({ success: true, message: `PIN reset successfully for ${slug}` });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
@@ -234,15 +259,25 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
     const { slug } = req.body;
     const delResult = await Salon.findOneAndDelete({ slug });
     if (!delResult) return res.status(404).json({ success: false, error: 'Salon not found.' });
+    clearFailedAttempts(`salon_${slug}`);
     res.json({ success: true, message: 'Salon deleted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Internal server error.' });
   }
 });
 
-app.post('/api/:salon/auth/verify', loginBruteLimiter, async (req, res) => {
+app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
+    const guardKey = `salon_${slug}`;
+    const guard = checkAccountBruteGuard(guardKey);
+    if (guard.locked) {
+      return res.status(429).json({ 
+        success: false, 
+        error: `Too many incorrect PIN attempts for this salon. Please wait ${guard.remainingMins} minute(s).` 
+      });
+    }
+
     let targetSalon = await Salon.findOne({ slug });
 
     if (!targetSalon) {
@@ -263,9 +298,11 @@ app.post('/api/:salon/auth/verify', loginBruteLimiter, async (req, res) => {
 
     const matched = await bcrypt.compare(passcode, targetSalon.passcodeHash);
     if (matched) {
+      clearFailedAttempts(guardKey);
       const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
       return res.json({ authenticated: true, success: true, token });
     } else {
+      recordFailedAttempt(guardKey);
       return res.status(401).json({ authenticated: false, success: false, error: 'Incorrect PIN.' });
     }
   } catch (err) {
@@ -300,6 +337,7 @@ app.post('/api/:salon/auth/set-passcode', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
+    clearFailedAttempts(`salon_${slug}`);
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
@@ -327,6 +365,7 @@ app.post('/api/:salon/auth/change-passcode', verifySalonJWT, async (req, res) =>
     const salt = await bcrypt.genSalt(10);
     targetSalon.passcodeHash = await bcrypt.hash(newPasscode, salt);
     await targetSalon.save();
+    clearFailedAttempts(`salon_${slug}`);
 
     const token = jwt.sign({ slug: targetSalon.slug, role: 'owner' }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ success: true, token });
