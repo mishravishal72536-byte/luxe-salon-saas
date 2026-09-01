@@ -30,7 +30,7 @@
 
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-2.5 sm:p-4 md:p-6 flex flex-col justify-between transition-colors duration-200">
 
-  <!-- Owner Studio Sign In Modal (Top-Aligned) -->
+  <!-- Owner Studio Sign In Modal -->
   <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-8 sm:pt-12 p-4 z-40 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 sm:p-6 text-center space-y-3.5 shadow-2xl modal-enter">
       <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl">🔐</div>
@@ -133,7 +133,6 @@
   </div>
 
   <div class="max-w-4xl mx-auto w-full space-y-3 sm:space-y-4">
-    <!-- Clean Header -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-3 sm:p-4 rounded-2xl shadow-sm space-y-2.5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5 min-w-0">
@@ -148,7 +147,6 @@
         </div>
       </div>
 
-      <!-- Action Row -->
       <div class="grid grid-cols-3 gap-1.5 pt-0.5">
         <button id="shopOnlineToggleBtn" onclick="playClickBeep(); toggleShopOnlineStatus()" class="text-[11px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold py-2 rounded-xl flex items-center justify-center gap-1">
           <span>🟢</span> <span>Shop Online</span>
@@ -162,7 +160,6 @@
       </div>
     </div>
 
-    <!-- Stats Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
       <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-3 rounded-2xl shadow-sm">
         <span class="text-[9px] sm:text-[10px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Served Today</span>
@@ -182,7 +179,6 @@
       </div>
     </div>
 
-    <!-- Chairs Section -->
     <div class="space-y-2">
       <div class="flex justify-between items-center px-1">
         <h2 class="text-[11px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Operating Chairs</h2>
@@ -195,7 +191,6 @@
       <div id="chairsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
     </div>
 
-    <!-- Live Waiting Line -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-2xl p-3.5 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
         <div>
@@ -207,7 +202,6 @@
       <div id="queueList" class="space-y-1.5"></div>
     </div>
 
-    <!-- Services Catalog -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-2xl p-3.5 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
         <div>
@@ -222,6 +216,8 @@
 
   <footer class="w-full py-4 text-center text-[11px] text-slate-400 dark:text-neutral-500 space-x-2 border-t border-slate-200 dark:border-neutral-900 mt-6">
     <span>© 2026 Luxe Queue SaaS</span>
+    <span>•</span>
+    <span>Made by Vishal Mishra</span>
     <span>•</span>
     <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms</a>
     <span>•</span>
@@ -331,6 +327,14 @@
       document.getElementById('authTenantSlugBadge').innerText = slug;
     }
 
+    function getAuthHeaders() {
+      const token = localStorage.getItem(`${tenantSlug}_owner_token`) || '';
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+    }
+
     async function checkAuthOnLoad() {
       if (!tenantSlug) {
         document.getElementById('authScreen').classList.remove('hidden');
@@ -343,8 +347,9 @@
 
       const trustedDevice = localStorage.getItem(`${tenantSlug}_trusted_device_${deviceId}`) === 'true';
       const isLocked = localStorage.getItem(`${tenantSlug}_is_locked`) === 'true';
+      const hasToken = localStorage.getItem(`${tenantSlug}_owner_token`);
 
-      if (trustedDevice && !isLocked) {
+      if (trustedDevice && !isLocked && hasToken) {
         try {
           const res = await fetch(`${API_BASE}/${tenantSlug}/state`);
           if (res.ok) {
@@ -427,9 +432,16 @@
             errBox.innerText = setData.error || 'Failed to initialize salon.';
             return;
           }
+          if (setData.token) {
+            localStorage.setItem(`${tenantSlug}_owner_token`, setData.token);
+          }
         } else if (!res.ok || (!data.success && !data.authenticated)) {
           errBox.innerText = data.error || '❌ Incorrect PIN.';
           return;
+        } else {
+          if (data.token) {
+            localStorage.setItem(`${tenantSlug}_owner_token`, data.token);
+          }
         }
 
         const deviceId = localStorage.getItem(`${tenantSlug}_device_id`);
@@ -456,6 +468,7 @@
         localStorage.removeItem(`${tenantSlug}_trusted_device_${deviceId}`);
       }
       localStorage.setItem(`${tenantSlug}_is_locked`, 'true');
+      localStorage.removeItem(`${tenantSlug}_owner_token`);
       window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
@@ -463,7 +476,7 @@
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/toggle-online`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: getAuthHeaders()
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -505,7 +518,7 @@
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/auth/change-passcode`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ currentPasscode, newPasscode })
         });
         if (!res.ok) {
@@ -514,6 +527,7 @@
         }
         const data = await res.json();
         if (data.success) {
+          if (data.token) localStorage.setItem(`${tenantSlug}_owner_token`, data.token);
           alert('Studio PIN changed successfully!');
           document.getElementById('changePinModal').classList.add('hidden');
         } else { errBox.innerText = data.error || 'Failed to change PIN.'; }
@@ -686,7 +700,7 @@
         try {
           await fetch(`${API_BASE}/${tenantSlug}/rename`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ shopName: newName })
           });
         } catch (e) {}
@@ -706,7 +720,10 @@
     async function confirmResetDay() {
       closeResetDayModal();
       try {
-        const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/${tenantSlug}/reset-day`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
         if (res.ok) { fetchState(); }
       } catch (e) { alert('Connection error.'); }
     }
@@ -761,7 +778,7 @@
         try {
           await fetch(`${API_BASE}/${tenantSlug}/chair/start`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ tokenNumber: nextCustomer.tokenNumber, chairNumber: freeChair.chairNumber })
           });
           freeChair.status = 'BUSY';
@@ -821,7 +838,7 @@
       try {
         await fetch(`${API_BASE}/${tenantSlug}/chair/complete`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ chairNumber })
         });
       } catch (e) {}

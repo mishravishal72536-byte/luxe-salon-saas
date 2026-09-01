@@ -137,7 +137,6 @@
           <div id="servicesListContainer" class="grid grid-cols-1 gap-2 text-xs max-h-[320px] overflow-y-auto pr-1 custom-scroll"></div>
         </div>
 
-        <!-- Centered Legal Terms Agreement -->
         <div class="flex items-center justify-center gap-2 pt-2 px-1">
           <input type="checkbox" id="termsAgreementCheckbox" class="accent-amber-500 w-4 h-4 rounded cursor-pointer shrink-0">
           <label for="termsAgreementCheckbox" class="text-[11px] text-slate-500 dark:text-neutral-400 cursor-pointer text-center leading-snug select-none">
@@ -169,6 +168,8 @@
 
   <footer class="w-full py-5 text-center text-xs text-slate-400 dark:text-neutral-500 space-x-2 border-t border-slate-200 dark:border-neutral-900 mt-8">
     <span>© 2026 Luxe Queue SaaS</span>
+    <span>•</span>
+    <span>Made by Vishal Mishra</span>
     <span>•</span>
     <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms of Service</a>
     <span>•</span>
@@ -202,7 +203,7 @@
     
     const urlParams = new URLSearchParams(window.location.search);
     const tenantSlug = urlParams.get('salon') || 'demo-salon';
-    let myTokenNumber = null, remainingSeconds = 0, timerRunning = false, alertSentForThisTurn = false;
+    let myTokenNumber = null, targetEndTime = 0, timerRunning = false;
     let wasPreviouslyOffline = false;
     let alertSentForThisTrust = null;
 
@@ -263,8 +264,11 @@
     }
 
     setInterval(() => {
-      if (timerRunning && remainingSeconds > 0) {
-        remainingSeconds--;
+      if (timerRunning && targetEndTime > 0) {
+        const now = Date.now();
+        const diffMs = targetEndTime - now;
+        const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
+
         const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
         const secs = String(remainingSeconds % 60).padStart(2, '0');
         document.getElementById('timerMinutes').innerText = mins;
@@ -319,7 +323,7 @@
         if (data.success) {
           myTokenNumber = data.tokenNumber;
           const waitMins = (data.booking?.estimatedWaitMinutes !== undefined) ? data.booking.estimatedWaitMinutes : totalMins;
-          remainingSeconds = waitMins * 60;
+          targetEndTime = Date.now() + (waitMins * 60 * 1000);
         } else { alert(data.error || 'Failed'); bookAnother(); return; }
       } catch (e) { alert('Server error during booking.'); bookAnother(); return; }
 
@@ -398,7 +402,7 @@
           if (myTokenNumber) {
             bookingForm.classList.add('hidden');
             shopClosedBanner.classList.add('hidden');
-            if (remainingSeconds > 0) {
+            if (targetEndTime > Date.now()) {
               timerRunning = true;
             }
           } else {
@@ -419,7 +423,7 @@
 
         const activeChair = chairs.find(c => c.currentToken === myTokenNumber);
         if (activeChair) {
-          remainingSeconds = 0; timerRunning = false;
+          targetEndTime = 0; timerRunning = false;
           document.getElementById('timerMinutes').innerText = '00';
           document.getElementById('timerSeconds').innerText = '00';
           document.getElementById('myQueuePosText').innerText = `🎯 YOUR TURN: CHAIR #${activeChair.chairNumber}`;
@@ -440,7 +444,7 @@
           triggerAlert("🔔 Get Ready!", "You are next in line. Please be prepared!");
         }
 
-        if (remainingSeconds > 0) {
+        if (targetEndTime > Date.now()) {
           document.getElementById('myQueuePosText').innerText = `You are #${myIndex + 1} in the waiting queue`;
         }
 
@@ -450,7 +454,7 @@
     }
 
     function bookAnother() {
-      myTokenNumber = null; timerRunning = false; alertSentForThisTrust = null;
+      myTokenNumber = null; timerRunning = false; alertSentForThisTrust = null; targetEndTime = 0;
       document.getElementById('cName').value = '';
       document.getElementById('termsAgreementCheckbox').checked = false;
       document.getElementById('myTokenCard').classList.add('hidden');
@@ -460,7 +464,7 @@
     }
 
     function showBookingFormForAnother() {
-      myTokenNumber = null;
+      myTokenNumber = null; targetEndTime = 0;
       document.getElementById('cName').value = '';
       document.getElementById('termsAgreementCheckbox').checked = false;
       document.getElementById('myTokenCard').classList.add('hidden');

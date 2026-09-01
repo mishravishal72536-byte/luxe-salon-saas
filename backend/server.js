@@ -109,7 +109,6 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-// 5 minutes window with max 4 failed login attempts
 const loginBruteLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 4,
@@ -361,7 +360,7 @@ app.get('/api/:salon/state', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/toggle-online', async (req, res) => {
+app.post('/api/:salon/toggle-online', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     let targetSalon = await Salon.findOne({ slug });
@@ -392,7 +391,7 @@ app.post('/api/:salon/rename', verifySalonJWT, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/reset-day', async (req, res) => {
+app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const targetSalon = await Salon.findOne({ slug });
@@ -484,7 +483,7 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/start', async (req, res) => {
+app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
@@ -510,7 +509,7 @@ app.post('/api/:salon/chair/start', async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/complete', async (req, res) => {
+app.post('/api/:salon/chair/complete', verifySalonJWT, async (req, res) => {
   try {
     const slug = req.params.salon;
     const { chairNumber } = req.body;

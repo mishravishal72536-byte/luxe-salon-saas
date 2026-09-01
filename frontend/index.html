@@ -66,6 +66,8 @@
   <footer class="w-full py-4 text-center text-[10px] text-neutral-500 border-t border-neutral-900 mt-6 space-x-2">
     <span>© 2026 Smart Salon SaaS</span>
     <span>•</span>
+    <span>Made by Vishal Mishra</span>
+    <span>•</span>
     <a href="terms.html" class="hover:text-amber-400 font-semibold transition-all">Terms</a>
     <span>•</span>
     <a href="privacy.html" class="hover:text-amber-400 font-semibold transition-all">Privacy</a>
@@ -133,9 +135,12 @@
             errBox.innerText = setData.error || 'Failed to register salon.';
             return;
           }
+          if (setData.token) localStorage.setItem(`${slug}_owner_token`, setData.token);
         } else if (!res.ok && res.status !== 200) {
           errBox.innerText = data.error || 'Incorrect PIN for existing salon.';
           return;
+        } else {
+          if (data.token) localStorage.setItem(`${slug}_owner_token`, data.token);
         }
 
         try { confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } }); } catch(e){}
