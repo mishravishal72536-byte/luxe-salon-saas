@@ -109,7 +109,7 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-// In-memory tracker for failed attempts per specific target/account instead of blinding entire Wi-Fi IP
+// In-memory strictly per-account tracker (IP completely ignored)
 const failedAttemptStore = {};
 function checkAccountBruteGuard(key) {
   const record = failedAttemptStore[key];
@@ -137,9 +137,10 @@ function clearFailedAttempts(key) {
   delete failedAttemptStore[key];
 }
 
+// Only mild rate limiter for bookings to prevent spamming queue generation
 const bookingLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 30,
+  max: 100,
   handler: (req, res) => {
     res.status(429).json({ success: false, error: 'Aapne is network se bohot saare tokens generate kar liye hain.' });
   }
@@ -522,7 +523,9 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/:salon/chair/start', verifySalonJWT, async (req, res) => {
+app.post('/api/:salon/chair/start', verifySalonJWT, async (err, req, res, next) => {
+  // safe fallback
+  if (typeof req === 'undefined') { req = err; }
   try {
     const slug = req.params.salon;
     const { tokenNumber, chairNumber } = req.body;
