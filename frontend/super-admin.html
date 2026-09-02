@@ -21,14 +21,6 @@
     .font-mono-num { font-family: 'JetBrains Mono', monospace; }
     .modal-enter { animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    .custom-scroll {
-      scrollbar-width: thin;
-      scrollbar-color: #f59e0b transparent;
-    }
-    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #d97706; }
   </style>
 </head>
 
@@ -96,7 +88,7 @@
 
   <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 text-center space-y-3 shadow-2xl modal-enter">
-      <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
+      <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
       <div>
         <h3 class="text-xs font-black text-white uppercase tracking-wider">Delete Salon?</h3>
         <p id="deleteSalonMsg" class="text-[11px] text-neutral-400 mt-0.5">This will permanently disconnect server and terminate sessions.</p>
@@ -109,7 +101,8 @@
     </div>
   </div>
 
-  <div class="max-w-5xl mx-auto w-full space-y-3.5 my-auto py-2">
+  <!-- Cockpit Main Area Starts Directly At Top -->
+  <div class="max-w-5xl mx-auto w-full space-y-3.5 pt-1 pb-6 flex-1">
     <div class="bg-neutral-900/90 border border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
       <div class="space-y-0.5">
         <h1 class="text-base sm:text-lg font-black text-amber-400 tracking-tight flex items-center justify-center sm:justify-start gap-1.5 uppercase">
@@ -152,7 +145,7 @@
         <span class="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 font-bold">Live Gateway</span>
       </div>
 
-      <div class="overflow-x-auto -mx-1 sm:mx-0 custom-scroll pb-1">
+      <div class="overflow-x-auto -mx-1 sm:mx-0 pb-1">
         <table class="w-full text-left border-collapse min-w-[580px] md:min-w-full">
           <thead>
             <tr class="border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-widest bg-neutral-950/40">
@@ -173,8 +166,8 @@
     </div>
   </div>
 
-  <!-- Always Visible at Screen Bottom Without Scroll -->
-  <footer class="w-full max-w-5xl mx-auto py-3 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
+  <!-- Sticky Bottom Footer -->
+  <footer class="w-full max-w-5xl mx-auto py-4 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
     <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>

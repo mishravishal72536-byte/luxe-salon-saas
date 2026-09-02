@@ -25,18 +25,10 @@
       #printArea, #printArea * { visibility: visible; }
       #printArea { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
     }
-    .custom-scroll {
-      scrollbar-width: thin;
-      scrollbar-color: #f59e0b transparent;
-    }
-    .custom-scroll::-webkit-scrollbar { width: 5px; }
-    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #d97706; }
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-2.5 sm:p-4 md:p-6 flex flex-col justify-between transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-[100dvh] p-2.5 sm:p-4 md:p-6 flex flex-col justify-between transition-colors duration-200">
 
   <!-- Owner Studio Sign In Modal -->
   <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-8 sm:pt-14 p-4 z-40 overflow-y-auto">
@@ -140,8 +132,8 @@
     </div>
   </div>
 
-  <!-- Studio Main Content -->
-  <div class="max-w-4xl mx-auto w-full space-y-3 sm:space-y-4 flex-1 pb-4">
+  <!-- Studio Main Content Starts Directly At Top -->
+  <div class="max-w-4xl mx-auto w-full space-y-3 sm:space-y-4 flex-1 pb-6">
     <!-- Header -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-3 sm:p-4 rounded-xl shadow-sm space-y-2.5">
       <div class="flex items-center justify-between">
@@ -212,10 +204,10 @@
         </div>
         <span id="qCount" class="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold">0 Waiting</span>
       </div>
-      <div id="queueList" class="space-y-1.5 max-h-[260px] overflow-y-auto pr-1 custom-scroll"></div>
+      <div id="queueList" class="space-y-1.5"></div>
     </div>
 
-    <!-- Services & Rates -->
+    <!-- Services & Rates (Extended Length, Scrollbar Removed) -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-3.5 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
         <div>
@@ -224,13 +216,14 @@
         </div>
         <button onclick="playClickBeep(); openServiceModal()" class="text-[11px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg cursor-pointer shadow-sm">+ Add</button>
       </div>
-      <div id="servicesEditorGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scroll"></div>
+      <!-- Natural Extended Height -->
+      <div id="servicesEditorGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5"></div>
     </div>
   </div>
 
   <!-- Sticky Bottom Footer -->
   <footer class="w-full max-w-4xl mx-auto py-4 text-center text-xs space-y-2.5 border-t border-slate-200 dark:border-neutral-900 mt-auto shrink-0">
-    <div class="flex items-center justify-center flex-wrap gap-2 text-slate-500 dark:text-neutral-400 font-medium">
+    <div class="flex items-center justify-center flex-wrap gap-2 text-slate-500 dark:text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>
       <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms of Service</a>
@@ -843,7 +836,6 @@
         return;
       }
 
-      /* 1-Line Subtle Rounded Queue Item */
       qBox.innerHTML = queue.map((q, idx) => `
         <div class="flex items-center justify-between gap-2 bg-slate-50 dark:bg-neutral-950 border ${idx === 0 ? 'border-amber-500/50' : 'border-slate-200 dark:border-neutral-800'} p-2.5 rounded-lg shadow-sm">
           <div class="flex items-center gap-2.5 min-w-0 flex-1">
