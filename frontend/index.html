@@ -22,7 +22,7 @@
 </head>
 <body class="bg-[#09090b] text-neutral-100 min-h-screen p-4 sm:p-6 flex flex-col justify-between overflow-y-auto">
 
-  <div class="max-w-sm sm:max-w-md mx-auto w-full space-y-4 pt-6 sm:pt-12">
+  <div class="max-w-sm sm:max-w-md mx-auto w-full space-y-4 my-auto flex-1 flex flex-col justify-center pt-4 pb-6">
     <div class="text-center space-y-2">
       <div class="inline-block bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] sm:text-[11px] font-extrabold px-3 py-0.5 rounded-full uppercase tracking-widest">
         Multi-Tenant Salon SaaS
@@ -33,7 +33,7 @@
       </p>
     </div>
 
-    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4 modal-enter">
+    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 sm:p-7 shadow-2xl space-y-4 modal-enter">
       <form onsubmit="playClickBeep(); handleLaunch(event)" class="space-y-3.5">
         <div>
           <label class="text-[10px] sm:text-xs text-neutral-400 block mb-1.5 font-bold uppercase tracking-wider">Salon Name</label>
@@ -63,9 +63,9 @@
     </div>
   </div>
 
-  <!-- Standardized 2-Line Professional Bright Footer -->
-  <footer class="w-full py-5 mt-8 text-center text-xs space-y-2.5 border-t border-neutral-900">
-    <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium">
+  <!-- Sticky Bottom Footer -->
+  <footer class="w-full py-4 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
+    <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>
       <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms of Service</a>

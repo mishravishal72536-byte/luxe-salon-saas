@@ -21,14 +21,22 @@
     .font-mono-num { font-family: 'JetBrains Mono', monospace; }
     .modal-enter { animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .custom-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: #f59e0b transparent;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #d97706; }
   </style>
 </head>
 
 <body class="bg-[#09090b] text-neutral-100 min-h-screen p-3 sm:p-5 md:p-6 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
 
   <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-10 sm:pt-16 p-4 z-50 overflow-y-auto">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 sm:p-6 text-center space-y-4 shadow-2xl modal-enter">
-      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">🛡️</div>
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 sm:p-6 text-center space-y-4 shadow-2xl modal-enter">
+      <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl flex items-center justify-center mx-auto text-xl shadow-inner">🛡️</div>
       <div>
         <h2 class="text-base sm:text-lg font-black text-white tracking-tight">Super Admin Cockpit</h2>
         <p class="text-[11px] text-neutral-400 mt-0.5">Enter Master Passcode to access fleet control.</p>
@@ -47,7 +55,7 @@
   </div>
 
   <div id="changeAdminPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 modal-enter">
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl space-y-3.5 modal-enter">
       <h3 class="text-xs font-black text-amber-400 uppercase tracking-wider">Change Master Admin PIN</h3>
       <div class="space-y-2.5 text-left">
         <div>
@@ -68,8 +76,8 @@
   </div>
 
   <div id="resetSalonPinModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 shadow-2xl space-y-3 modal-enter">
-      <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold">🔑</div>
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl space-y-3 modal-enter">
+      <div class="w-10 h-10 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl flex items-center justify-center mx-auto text-lg font-bold">🔑</div>
       <div class="text-center">
         <h3 class="text-xs font-black text-white uppercase tracking-wider">Reset Salon PIN</h3>
         <p id="resetPinSubTitle" class="text-[11px] text-neutral-400 mt-0.5">Enter new PIN for salon.</p>
@@ -87,8 +95,8 @@
   </div>
 
   <div id="deleteSalonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-12 sm:pt-16 p-4 z-50">
-    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-3xl p-5 text-center space-y-3 shadow-2xl modal-enter">
-      <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
+    <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 text-center space-y-3 shadow-2xl modal-enter">
+      <div class="w-10 h-10 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center justify-center mx-auto text-lg font-bold shadow-inner">🗑️</div>
       <div>
         <h3 class="text-xs font-black text-white uppercase tracking-wider">Delete Salon?</h3>
         <p id="deleteSalonMsg" class="text-[11px] text-neutral-400 mt-0.5">This will permanently disconnect server and terminate sessions.</p>
@@ -101,8 +109,8 @@
     </div>
   </div>
 
-  <div class="max-w-5xl mx-auto w-full space-y-4">
-    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
+  <div class="max-w-5xl mx-auto w-full space-y-4 flex-1 pb-4">
+    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
       <div class="space-y-0.5">
         <h1 class="text-base sm:text-lg font-black text-amber-400 tracking-tight flex items-center justify-center sm:justify-start gap-1.5 uppercase">
           <span>⚡</span> Super Admin Cockpit
@@ -124,27 +132,27 @@
     </div>
 
     <div class="grid grid-cols-3 gap-2.5 sm:gap-3.5">
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-2xl shadow-md">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
         <div id="statTotalSalons" class="text-xl sm:text-2xl font-black text-white font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-2xl shadow-md">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Active</span>
         <div id="statActiveSalons" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-2xl shadow-md">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Halted</span>
         <div id="statHaltedSalons" class="text-xl sm:text-2xl font-black text-red-400 font-mono-num mt-1">0</div>
       </div>
     </div>
 
-    <div class="bg-neutral-900/80 border border-neutral-800 rounded-3xl p-4 sm:p-5 shadow-xl space-y-3">
+    <div class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
       <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
         <h2 class="text-xs sm:text-sm font-black text-neutral-300 uppercase tracking-wider">Fleet Registry</h2>
         <span class="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 font-bold">Live Gateway</span>
       </div>
 
-      <div class="overflow-x-auto -mx-1 sm:mx-0">
+      <div class="overflow-x-auto -mx-1 sm:mx-0 custom-scroll pb-1">
         <table class="w-full text-left border-collapse min-w-[620px] md:min-w-full">
           <thead>
             <tr class="border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-widest bg-neutral-950/40">
@@ -165,9 +173,9 @@
     </div>
   </div>
 
-  <!-- Standardized 2-Line Professional Bright Footer -->
-  <footer class="w-full py-5 mt-8 text-center text-xs space-y-2.5 border-t border-neutral-900">
-    <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium">
+  <!-- Sticky Bottom Footer -->
+  <footer class="w-full max-w-5xl mx-auto py-4 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
+    <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>
       <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms of Service</a>

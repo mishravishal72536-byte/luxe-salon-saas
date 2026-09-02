@@ -9,35 +9,45 @@
     tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { DEFAULT: '#f59e0b' } } } } }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Plus Jakarta Sans', sans-serif; } </style>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scroll {
+      scrollbar-width: thin;
+      scrollbar-color: #f59e0b transparent;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #d97706; }
+  </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen p-4 sm:p-8 flex flex-col justify-between">
-  <main class="max-w-3xl mx-auto w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-    <div class="flex justify-between items-center border-b border-slate-200 dark:border-neutral-800 pb-4">
-      <h1 class="text-xl sm:text-2xl font-black text-amber-500 uppercase tracking-tight">Terms of Service</h1>
-      <a href="index.html" class="text-xs bg-slate-100 dark:bg-neutral-800 px-3.5 py-2 rounded-xl text-slate-700 dark:text-neutral-300 font-semibold hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all">← Home</a>
+<body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-screen flex flex-col justify-between p-4 sm:p-8 transition-colors duration-200">
+  <main class="max-w-3xl mx-auto w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-5 sm:p-8 shadow-sm space-y-5 my-auto flex-1 flex flex-col justify-center">
+    <div class="flex justify-between items-center border-b border-slate-200 dark:border-neutral-800 pb-3">
+      <h1 class="text-lg sm:text-xl font-black text-amber-500 uppercase tracking-tight">Terms of Service</h1>
+      <a href="index.html" class="text-xs bg-slate-100 dark:bg-neutral-800 px-3 py-1.5 rounded-lg text-slate-700 dark:text-neutral-300 font-semibold hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all cursor-pointer">← Home</a>
     </div>
     
-    <div class="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
-      <p>Welcome to <strong>Luxe Queue SaaS</strong>. By launching, registering, or accessing our multi-tenant queue management and counter system, you agree to comply with and be bound by the following terms and conditions[cite: 22].</p>
+    <div class="space-y-3.5 text-xs sm:text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
+      <p>Welcome to <strong>Luxe Queue SaaS</strong>. By launching, registering, or accessing our multi-tenant queue management and counter system, you agree to comply with and be bound by the following terms and conditions.</p>
       
-      <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase pt-2">1. Salon Account & Security PIN</h2>
-      <p>Salon owners are solely responsible for maintaining the security of their 4-digit security PIN and account credentials[cite: 22]. Any unauthorized access resulting from shared or compromised PINs is the owner's responsibility[cite: 22].</p>
+      <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase pt-1">1. Salon Account & Security PIN</h2>
+      <p>Salon owners are solely responsible for maintaining the security of their 4-digit security PIN and account credentials. Any unauthorized access resulting from shared or compromised PINs is the owner's responsibility.</p>
       
-      <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase pt-2">2. Queue & Dispatch System</h2>
-      <p>Our platform provides real-time estimated wait-time calculations, live chair dispatch, and customer web passes[cite: 22]. Timers and wait estimates are calculated dynamically based on historical averages and active salon states, and may vary depending on actual service durations[cite: 22].</p>
+      <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase pt-1">2. Queue & Dispatch System</h2>
+      <p>Our platform provides real-time estimated wait-time calculations, live chair dispatch, and customer web passes. Timers and wait estimates are calculated dynamically based on historical averages and active salon states, and may vary depending on actual service durations.</p>
       
-      <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase pt-2">3. Acceptable Use</h2>
-      <p>Users and salon operators agree not to misuse the platform, attempt unauthorized server breaches, or bypass multi-tenant restrictions enforced by the Super Admin control cockpit[cite: 22].</p>
+      <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase pt-1">3. Acceptable Use</h2>
+      <p>Users and salon operators agree not to misuse the platform, attempt unauthorized server breaches, or bypass multi-tenant restrictions enforced by the Super Admin control cockpit.</p>
       
-      <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase pt-2">4. Service Modifications & Termination</h2>
-      <p>We reserve the right to suspend, halt, or terminate salon access or server connections in cases of policy violations, fraudulent bookings, or administrative actions by the Super Admin[cite: 22].</p>
+      <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase pt-1">4. Service Modifications & Termination</h2>
+      <p>We reserve the right to suspend, halt, or terminate salon access or server connections in cases of policy violations, fraudulent bookings, or administrative actions by the Super Admin.</p>
     </div>
   </main>
   
-  <!-- Standardized 2-Line Professional Bright Footer -->
-  <footer class="w-full py-5 mt-8 text-center text-xs space-y-2.5 border-t border-slate-200 dark:border-neutral-900">
-    <div class="flex items-center justify-center flex-wrap gap-2 text-slate-500 dark:text-neutral-400 font-medium">
+  <!-- Sticky Bottom Footer -->
+  <footer class="w-full max-w-3xl mx-auto py-4 text-center text-xs space-y-2 border-t border-slate-200 dark:border-neutral-900 mt-auto shrink-0">
+    <div class="flex items-center justify-center flex-wrap gap-2 text-slate-500 dark:text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>
       <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all">Terms of Service</a>
