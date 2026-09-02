@@ -32,7 +32,7 @@
   </style>
 </head>
 
-<body class="bg-[#09090b] text-neutral-100 min-h-screen p-3 sm:p-5 md:p-6 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
+<body class="bg-[#09090b] text-neutral-100 min-h-[100dvh] p-3 sm:p-5 flex flex-col justify-between selection:bg-amber-500 selection:text-black">
 
   <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-10 sm:pt-16 p-4 z-50 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 sm:p-6 text-center space-y-4 shadow-2xl modal-enter">
@@ -109,8 +109,8 @@
     </div>
   </div>
 
-  <div class="max-w-5xl mx-auto w-full space-y-4 flex-1 pb-4">
-    <div class="bg-neutral-900/90 border border-neutral-800 p-4 sm:p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
+  <div class="max-w-5xl mx-auto w-full space-y-3.5 my-auto py-2">
+    <div class="bg-neutral-900/90 border border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
       <div class="space-y-0.5">
         <h1 class="text-base sm:text-lg font-black text-amber-400 tracking-tight flex items-center justify-center sm:justify-start gap-1.5 uppercase">
           <span>⚡</span> Super Admin Cockpit
@@ -131,36 +131,36 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-2.5 sm:gap-3.5">
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
+    <div class="grid grid-cols-3 gap-2.5">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Total Salons</span>
         <div id="statTotalSalons" class="text-xl sm:text-2xl font-black text-white font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Active</span>
         <div id="statActiveSalons" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono-num mt-1">0</div>
       </div>
-      <div class="bg-neutral-900/60 border border-neutral-800 p-3 sm:p-4 rounded-xl shadow-md">
+      <div class="bg-neutral-900/60 border border-neutral-800 p-3 rounded-xl shadow-md">
         <span class="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Halted</span>
         <div id="statHaltedSalons" class="text-xl sm:text-2xl font-black text-red-400 font-mono-num mt-1">0</div>
       </div>
     </div>
 
-    <div class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3">
-      <div class="flex justify-between items-center border-b border-neutral-800 pb-3">
+    <div class="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-2.5">
+      <div class="flex justify-between items-center border-b border-neutral-800 pb-2.5">
         <h2 class="text-xs sm:text-sm font-black text-neutral-300 uppercase tracking-wider">Fleet Registry</h2>
         <span class="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 font-bold">Live Gateway</span>
       </div>
 
       <div class="overflow-x-auto -mx-1 sm:mx-0 custom-scroll pb-1">
-        <table class="w-full text-left border-collapse min-w-[620px] md:min-w-full">
+        <table class="w-full text-left border-collapse min-w-[580px] md:min-w-full">
           <thead>
             <tr class="border-b border-neutral-800 text-[10px] text-neutral-400 uppercase tracking-widest bg-neutral-950/40">
-              <th class="py-3 px-3 sm:px-4">Salon</th>
-              <th class="py-3 px-3">Onboarded</th>
-              <th class="py-3 px-3">Age</th>
-              <th class="py-3 px-3">Status</th>
-              <th class="py-3 px-3 sm:px-4 text-right">Actions</th>
+              <th class="py-2.5 px-3">Salon</th>
+              <th class="py-2.5 px-3">Onboarded</th>
+              <th class="py-2.5 px-3">Age</th>
+              <th class="py-2.5 px-3">Status</th>
+              <th class="py-2.5 px-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody id="salonsTableBody" class="divide-y divide-neutral-800/60 text-xs">
@@ -173,8 +173,8 @@
     </div>
   </div>
 
-  <!-- Sticky Bottom Footer -->
-  <footer class="w-full max-w-5xl mx-auto py-4 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
+  <!-- Always Visible at Screen Bottom Without Scroll -->
+  <footer class="w-full max-w-5xl mx-auto py-3 text-center text-xs space-y-2 border-t border-neutral-900 mt-auto shrink-0">
     <div class="flex items-center justify-center flex-wrap gap-2 text-neutral-400 font-medium text-[11px]">
       <span>© 2026 Luxe Queue SaaS</span>
       <span>•</span>
@@ -326,22 +326,22 @@
 
       tbody.innerHTML = salons.map(s => `
         <tr class="hover:bg-neutral-800/30 transition-all">
-          <td class="py-3 px-3 sm:px-4">
-            <span class="font-bold text-white block uppercase text-xs">${s.shopName}</span>
-            <span class="text-[10px] text-amber-400 font-mono">salon=${s.slug}</span>
+          <td class="py-2.5 px-3">
+            <span class="font-bold text-white block uppercase text-[11px]">${s.shopName}</span>
+            <span class="text-[9px] text-amber-400 font-mono">salon=${s.slug}</span>
           </td>
-          <td class="py-3 px-3 text-neutral-400 font-mono text-xs">
+          <td class="py-2.5 px-3 text-neutral-400 font-mono text-[10px]">
             ${new Date(s.onboardedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
           </td>
-          <td class="py-3 px-3 text-emerald-400 font-bold font-mono-num text-xs">
+          <td class="py-2.5 px-3 text-emerald-400 font-bold font-mono-num text-[10px]">
             ${s.daysOnboarded}D
           </td>
-          <td class="py-3 px-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-black ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 rounded text-[9px] font-black ${s.isHalted ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}">
               ${s.isHalted ? 'HALTED' : 'ACTIVE'}
             </span>
           </td>
-          <td class="py-3 px-3 sm:px-4 text-right">
+          <td class="py-2.5 px-3 text-right">
             <div class="flex items-center justify-end gap-1.5 flex-nowrap">
               <button onclick="playClickBeep(); resetSalonPinPrompt('${s.slug}')" class="bg-neutral-800 hover:bg-neutral-700 text-amber-400 px-2 py-1 rounded-md text-[10px] font-bold cursor-pointer">🔑 PIN</button>
               <button onclick="playClickBeep(); toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1 rounded-md text-[10px] font-black cursor-pointer">
