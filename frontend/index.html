@@ -58,7 +58,7 @@
     </div>
 
     <div class="text-center pt-1">
-      <a href="super-admin.html" class="text-xs text-neutral-500 hover:text-amber-400 font-semibold transition-all">
+      <a href="/super-admin" class="text-xs text-neutral-500 hover:text-amber-400 font-semibold transition-all">
         🛡️ Access Super Admin Cockpit
       </a>
     </div>
@@ -69,9 +69,9 @@
     <div class="flex items-center justify-center gap-1 sm:gap-2 text-slate-500 dark:text-neutral-400 font-medium whitespace-nowrap text-[clamp(8px,2.4vw,11px)] leading-none select-none">
       <span class="shrink-0">© 2026 Luxe Queue SaaS</span>
       <span class="shrink-0">•</span>
-      <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
+      <a href="/terms" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
       <span class="shrink-0">•</span>
-      <a href="privacy.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
+      <a href="/privacy" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
     </div>
 
     <div class="flex justify-center">
@@ -154,7 +154,7 @@
 
         try { confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } }); } catch(e){}
         setTimeout(() => {
-          window.location.href = `owner.html?salon=${slug}`;
+          window.location.href = `/owner/${slug}`;
         }, 400);
 
       } catch (e) {

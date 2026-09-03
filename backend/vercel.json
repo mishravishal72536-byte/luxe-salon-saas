@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/owner/:salon", "destination": "/owner.html?salon=:salon" },
+    { "source": "/customer/:salon", "destination": "/customer.html?salon=:salon" },
+    { "source": "/owner", "destination": "/index.html" },
+    { "source": "/customer", "destination": "/index.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/super-admin", "destination": "/super-admin.html" }
+  ]
+}

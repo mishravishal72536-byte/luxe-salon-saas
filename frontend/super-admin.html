@@ -101,7 +101,6 @@
     </div>
   </div>
 
-  <!-- Cockpit Main Area Starts Directly At Top -->
   <div class="max-w-5xl mx-auto w-full space-y-3.5 pt-1 pb-6 flex-1">
     <div class="bg-neutral-900/90 border border-neutral-800 p-3.5 sm:p-4 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between text-center sm:text-left gap-3">
       <div class="space-y-0.5">
@@ -171,9 +170,9 @@
     <div class="flex items-center justify-center gap-1 sm:gap-2 text-slate-500 dark:text-neutral-400 font-medium whitespace-nowrap text-[clamp(8px,2.4vw,11px)] leading-none select-none">
       <span class="shrink-0">© 2026 Luxe Queue SaaS</span>
       <span class="shrink-0">•</span>
-      <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
+      <a href="/terms" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
       <span class="shrink-0">•</span>
-      <a href="privacy.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
+      <a href="/privacy" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
     </div>
 
     <div class="flex justify-center">
@@ -183,6 +182,7 @@
       </a>
     </div>
   </footer>
+
   <script>
     function playClickBeep() {
       try {
@@ -339,7 +339,7 @@
               <button onclick="playClickBeep(); toggleHaltSalon('${s.slug}')" class="${s.isHalted ? 'bg-emerald-600 text-white' : 'bg-red-500/20 text-red-400 border border-red-500/30'} px-2 py-1 rounded-md text-[10px] font-black cursor-pointer">
                 ${s.isHalted ? 'Resume' : 'Halt'}
               </button>
-              <a href="owner.html?salon=${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1 rounded-md text-[10px] font-bold">Studio ↗</a>
+              <a href="/owner/${s.slug}" target="_blank" class="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-2 py-1 rounded-md text-[10px] font-bold">Studio ↗</a>
               <button onclick="playClickBeep(); deleteSalonPrompt('${s.slug}', '${s.shopName}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-1 rounded-md text-[10px] cursor-pointer" title="Delete">🗑️</button>
             </div>
           </td>
