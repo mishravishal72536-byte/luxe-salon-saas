@@ -30,7 +30,6 @@
 
 <body class="bg-slate-50 dark:bg-[#09090b] text-slate-800 dark:text-neutral-100 min-h-[100dvh] p-2.5 sm:p-4 md:p-6 flex flex-col justify-between transition-colors duration-200">
 
-  <!-- Owner Studio Sign In Modal -->
   <div id="authScreen" class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-start justify-center pt-8 sm:pt-14 p-4 z-40 overflow-y-auto">
     <div class="bg-neutral-900 border border-neutral-800 w-full max-w-xs sm:max-w-sm rounded-2xl p-5 sm:p-6 text-center space-y-3.5 shadow-2xl modal-enter">
       <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-xl flex items-center justify-center mx-auto text-xl">🔐</div>
@@ -67,7 +66,7 @@
         <h2 class="text-base font-black text-white">Server Disconnected</h2>
         <p id="disconnectReasonMsg" class="text-xs text-neutral-400 mt-1">This salon has been deleted or suspended by Super Admin.</p>
       </div>
-      <button onclick="playClickBeep(); window.location.href='/'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-2.5 rounded-xl transition-all cursor-pointer">
+      <button onclick="playClickBeep(); window.location.href='index.html'" class="w-full bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs py-2.5 rounded-xl transition-all cursor-pointer">
         Exit to Launcher
       </button>
     </div>
@@ -132,9 +131,7 @@
     </div>
   </div>
 
-  <!-- Studio Main Content Starts Directly At Top -->
   <div class="max-w-4xl mx-auto w-full space-y-3 sm:space-y-4 flex-1 pb-6">
-    <!-- Header -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-3 sm:p-4 rounded-xl shadow-sm space-y-2.5">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-1.5 min-w-0">
@@ -162,7 +159,6 @@
       </div>
     </div>
 
-    <!-- 4 Stats Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
       <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 p-3 rounded-xl shadow-sm">
         <span class="text-[9px] sm:text-[10px] text-slate-500 dark:text-neutral-400 uppercase font-bold tracking-wider">Served Today</span>
@@ -182,7 +178,6 @@
       </div>
     </div>
 
-    <!-- Operating Chairs Grid -->
     <div class="space-y-2">
       <div class="flex justify-between items-center px-1">
         <h2 class="text-[11px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Operating Chairs</h2>
@@ -195,7 +190,6 @@
       <div id="chairsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
     </div>
 
-    <!-- Live Waiting Line Card -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-3.5 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
         <div>
@@ -207,7 +201,6 @@
       <div id="queueList" class="space-y-1.5"></div>
     </div>
 
-    <!-- Services & Rates -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-3.5 shadow-sm space-y-2">
       <div class="flex justify-between items-center">
         <div>
@@ -220,14 +213,13 @@
     </div>
   </div>
 
-  <!-- Standardized 2-Line Non-Breaking Footer -->
   <footer class="w-full py-4 text-center space-y-2 border-t border-slate-200 dark:border-neutral-900 mt-auto shrink-0 px-2">
     <div class="flex items-center justify-center gap-1 sm:gap-2 text-slate-500 dark:text-neutral-400 font-medium whitespace-nowrap text-[clamp(8px,2.4vw,11px)] leading-none select-none">
       <span class="shrink-0">© 2026 Luxe Queue SaaS</span>
       <span class="shrink-0">•</span>
-      <a href="/terms" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
+      <a href="terms.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Terms of Service</a>
       <span class="shrink-0">•</span>
-      <a href="/privacy" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
+      <a href="privacy.html" class="hover:text-amber-500 font-semibold transition-all shrink-0">Privacy Policy</a>
     </div>
 
     <div class="flex justify-center">
@@ -323,21 +315,8 @@
     const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
       ? 'http://localhost:5000/api'
       : 'https://luxe-salon-saas.onrender.com/api';
-
-    // Extract tenantSlug cleanly from path (/owner/salon-name) or query params
     const urlParams = new URLSearchParams(window.location.search);
-    let tenantSlug = urlParams.get('salon');
-    if (!tenantSlug) {
-      const pathParts = window.location.pathname.split('/').filter(Boolean);
-      const ownerIdx = pathParts.indexOf('owner');
-      if (ownerIdx !== -1 && pathParts[ownerIdx + 1]) {
-        tenantSlug = pathParts[ownerIdx + 1];
-      } else if (pathParts.length > 0 && pathParts[0] !== 'owner.html') {
-        tenantSlug = pathParts[pathParts.length - 1];
-      }
-    }
-    tenantSlug = tenantSlug || '';
-
+    let tenantSlug = urlParams.get('salon') || '';
     let isFirstTimeSetup = false;
     let isShopOnline = true;
 
@@ -478,7 +457,7 @@
         document.getElementById('authScreen').classList.add('hidden');
         try { confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } }); } catch (e) {}
 
-        const newUrl = `/owner/${tenantSlug}`;
+        const newUrl = `owner.html?salon=${tenantSlug}`;
         window.history.replaceState({}, '', newUrl);
 
         initShopName();
@@ -496,7 +475,7 @@
       }
       localStorage.setItem(`${tenantSlug}_is_locked`, 'true');
       localStorage.removeItem(`${tenantSlug}_owner_token`);
-      window.location.href = `/owner/${tenantSlug}`;
+      window.location.href = `owner.html?salon=${tenantSlug}`;
     }
 
     async function toggleShopOnlineStatus() {
@@ -701,7 +680,7 @@
       document.getElementById('printShopTitle').innerText = shopName;
       const qrBox = document.getElementById('qrcodeBox');
       qrBox.innerHTML = '';
-      const targetCustomerUrl = `${window.location.origin}/customer/${tenantSlug}`;
+      const targetCustomerUrl = `${window.location.origin}/customer.html?salon=${tenantSlug}`;
       document.getElementById('qrLinkText').href = targetCustomerUrl;
       document.getElementById('qrLinkText').innerText = targetCustomerUrl;
 

@@ -109,26 +109,6 @@ function verifySalonJWT(req, res, next) {
   });
 }
 
-// Express fallback routes for pretty/clean URLs
-app.get('/owner/:salon', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/owner.html'));
-});
-app.get('/customer/:salon', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/customer.html'));
-});
-app.get('/terms', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/terms.html'));
-});
-app.get('/privacy', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/privacy.html'));
-});
-app.get('/super-admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/super-admin.html'));
-});
-
-// ---------------------------------------------------------
-// Per-Device & Per-Account Brute Force Protection Engine
-// ---------------------------------------------------------
 const deviceAttemptStore = {};
 
 function getClientFingerprint(req, targetEntity) {
@@ -171,7 +151,6 @@ const bookingLimiter = rateLimit({
   }
 });
 
-// Super Admin Login
 app.post('/api/admin/login', async (req, res) => {
   try {
     const fingerprint = getClientFingerprint(req, 'super_admin');
@@ -292,7 +271,6 @@ app.post('/api/admin/delete', verifyAdminJWT, async (req, res) => {
   }
 });
 
-// Salon Owner Login
 app.post('/api/:salon/auth/verify', async (req, res) => {
   try {
     const slug = req.params.salon;
