@@ -1,9 +1,12 @@
 {
+  "version": 2,
+  "public": true,
   "rewrites": [
     { "source": "/owner/:salon", "destination": "/frontend/owner.html" },
     { "source": "/customer/:salon", "destination": "/frontend/customer.html" },
     { "source": "/super-admin", "destination": "/frontend/super-admin.html" },
     { "source": "/terms", "destination": "/frontend/terms.html" },
-    { "source": "/privacy", "destination": "/frontend/privacy.html" }
+    { "source": "/privacy", "destination": "/frontend/privacy.html" },
+    { "source": "/", "destination": "/frontend/index.html" }
   ]
 }
