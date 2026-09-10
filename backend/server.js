@@ -457,6 +457,7 @@ app.post('/api/:salon/reset-day', verifySalonJWT, async (req, res) => {
   }
 });
 
+// BOOKING ENDPOINT WITH RACE CONDITION & SMART CHAIR TIMER FIX
 app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
   try {
     const slug = req.params.salon;
@@ -508,13 +509,14 @@ app.post('/api/:salon/book', bookingLimiter, async (req, res) => {
       freeChair.remainingMinutes = durationMins;
       bookingItem.estimatedWaitMinutes = 0;
     } else {
-      let workloads = targetSalon.chairs.map(c => (c.status === 'BUSY' ? (c.remainingMinutes || 20) : 0));
+      // Smart Chair-based workload calculation
+      let chairWorkloads = targetSalon.chairs.map(c => (c.status === 'BUSY' ? (c.remainingMinutes || 20) : 0));
       targetSalon.queue.forEach(q => {
-        let minIdx = workloads.indexOf(Math.min(...workloads));
-        workloads[minIdx] += (q.totalDurationMinutes || 20);
+        let minIdx = chairWorkloads.indexOf(Math.min(...chairWorkloads));
+        chairWorkloads[minIdx] += (q.totalDurationMinutes || 20);
       });
-      let bestChairIdx = workloads.indexOf(Math.min(...workloads));
-      bookingItem.estimatedWaitMinutes = workloads[bestChairIdx];
+      let bestChairIdx = chairWorkloads.indexOf(Math.min(...chairWorkloads));
+      bookingItem.estimatedWaitMinutes = chairWorkloads[bestChairIdx];
       targetSalon.queue.push(bookingItem);
     }
 
