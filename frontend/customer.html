@@ -83,12 +83,12 @@
         <p id="estWaitSubtitle" class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Calculated from live queue</p>
       </div>
 
-      <div class="bg-amber-500/5 dark:bg-neutral-950 border border-amber-500/20 dark:border-neutral-800 p-2.5 rounded-xl space-y-0.5">
+      <div id="statusNoticeBox" class="bg-amber-500/5 dark:bg-neutral-950 border border-amber-500/20 dark:border-neutral-800 p-2.5 rounded-xl space-y-0.5">
         <p id="myQueuePosText" class="text-xs font-bold text-amber-500">Token Generated Successfully</p>
-        <p class="text-[10px] text-amber-600 dark:text-amber-400 font-medium">💡 Keep this tab open to receive live turn notifications!</p>
+        <p id="statusSubNotice" class="text-[10px] text-amber-600 dark:text-amber-400 font-medium">💡 Keep this tab open to receive live turn notifications!</p>
       </div>
 
-      <div class="bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-3 rounded-xl text-left space-y-1.5">
+      <div id="chairsSectionContainer" class="bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-3 rounded-xl text-left space-y-1.5">
         <span class="text-[10px] font-bold text-amber-500 uppercase tracking-wider block">Live Operating Chairs</span>
         <div id="customerChairsLiveGrid" class="grid grid-cols-3 gap-2 text-center"></div>
       </div>
@@ -137,34 +137,23 @@
       </div>
     </div>
 
-    <!-- REFINED DROP A REVIEW SECTION -->
+    <!-- CLEAN & POLITE REVIEW SECTION -->
     <div class="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm space-y-3">
       <div class="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-neutral-800">
         <div>
           <h2 class="text-sm font-bold text-slate-900 dark:text-neutral-200">Drop a Review</h2>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400">Share your salon experience</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400">We'd love your feedback</p>
         </div>
         <span class="text-[10px] text-amber-500 font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md">⭐ Wall of Love</span>
       </div>
 
-      <div class="space-y-2.5 pt-1">
-        <div>
-          <label class="text-[11px] text-slate-600 dark:text-neutral-400 block mb-1 font-semibold">Your Name</label>
-          <input id="reviewAuthor" type="text" placeholder="e.g. Aman Sharma" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 focus:border-amber-400 rounded-lg px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none">
-        </div>
-        <div>
-          <label class="text-[11px] text-slate-600 dark:text-neutral-400 block mb-1 font-semibold">Your Feedback / Review</label>
-          <textarea id="reviewText" rows="2.5" placeholder="How was your haircut or service today? Write your feedback here..." class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 focus:border-amber-400 rounded-lg px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:outline-none resize-none"></textarea>
-        </div>
-        <button onclick="playClickBeep(); submitReview()" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-extrabold text-xs py-2.5 rounded-lg transition-all shadow-sm cursor-pointer flex items-center justify-center gap-1.5">
-          <span>✍️</span> Submit Review
-        </button>
+      <div class="space-y-2 pt-1">
+        <input id="reviewAuthor" type="text" placeholder="Your Name" class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none">
+        <textarea id="reviewText" rows="2" placeholder="Kindly share your experience with us..." class="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-300 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none resize-none"></textarea>
+        <button onclick="playClickBeep(); submitReview()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs py-2.5 rounded-lg transition-all cursor-pointer">Submit Review ✍️</button>
       </div>
 
-      <div class="pt-2">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Recent Customer Feedback</span>
-        <div id="reviewsListContainer" class="space-y-2"></div>
-      </div>
+      <div id="reviewsListContainer" class="space-y-2 pt-1"></div>
     </div>
   </main>
 
@@ -321,6 +310,8 @@
       document.getElementById('bookingForm').classList.add('hidden');
       document.getElementById('shopClosedBanner').classList.add('hidden');
       document.getElementById('myTokenCard').classList.remove('hidden');
+      document.getElementById('waitBoxContainer').classList.remove('hidden');
+      document.getElementById('chairsSectionContainer').classList.remove('hidden');
 
       try {
         const res = await fetch(`${API_BASE}/${tenantSlug}/book`, {
@@ -337,7 +328,6 @@
       } catch (e) { alert('Server error during booking.'); bookAnother(); return; }
 
       timerRunning = true; alertSentForThisTrust = null;
-      document.getElementById('waitBoxContainer').classList.remove('hidden');
       document.getElementById('myTokenDisplay').innerText = `#${myTokenNumber}`;
       try { confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } }); } catch (e) {}
       
@@ -402,7 +392,10 @@
             shopClosedBanner.classList.remove('hidden');
           }
         } else {
-          timerWrapper.classList.remove('hidden');
+          timerWrapper.classList.add('hidden'); // default hidden until checked if token active
+          if (myTokenNumber) {
+            timerWrapper.classList.remove('hidden');
+          }
           offlineNotice.classList.add('hidden');
           waitBoxTitle.innerText = "Estimated Wait Time";
           estWaitSubtitle.innerText = "Calculated from live queue";
@@ -435,14 +428,14 @@
         const queue = data.queue || [];
         const isInQueue = queue.some(q => q.tokenNumber === myTokenNumber);
 
-        // FIX: Service complete hone par Thanks for coming show karna
+        // SERVICE COMPLETE HONE PAR HATA DIYE TIMER AUR CHAIRS, AUR BOLA POLITELY REVIEW DAALNE KE LIYE
         if (!activeChair && !isInQueue) {
           targetEndTime = 0; timerRunning = false;
-          document.getElementById('timerMinutes').innerText = '00';
-          document.getElementById('timerSeconds').innerText = '00';
           document.getElementById('waitBoxContainer').classList.add('hidden');
+          document.getElementById('chairsSectionContainer').classList.add('hidden');
           document.getElementById('myTokenDisplay').innerText = `#${myTokenNumber}`;
           document.getElementById('myQueuePosText').innerHTML = `🎉 <strong class="text-emerald-400">Service Completed!</strong><br>Thanks for coming to ${data.shopName || 'Salon'}. Have a great day! ✨`;
+          document.getElementById('statusSubNotice').innerHTML = `💡 Kindly take a moment to drop your valuable feedback below! 🙏`;
           return;
         }
 
@@ -459,7 +452,6 @@
         }
 
         const myIndex = queue.findIndex(q => q.tokenNumber === myTokenNumber);
-        
         if (myIndex === -1) return;
 
         if (myIndex === 0 && alertSentForThisTrust !== 'next' && isOnline) {
