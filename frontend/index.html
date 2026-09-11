@@ -29,7 +29,7 @@
       </div>
       <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Smart Salon System</h1>
       <p class="text-xs text-neutral-400 max-w-sm mx-auto leading-relaxed">
-        Enter your salon name and security PIN below to register, launch or sign in to your dashboard.
+        Enter your salon name and security PIN. New salons register automatically, and existing ones sign in securely.
       </p>
     </div>
 
@@ -50,7 +50,7 @@
         </div>
 
         <button type="submit" class="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.98] text-slate-950 font-black text-xs sm:text-sm py-3 rounded-xl transition-all shadow-lg cursor-pointer tracking-wide">
-          🚀 Launch / Register My Salon →
+          🚀 Open Salon Studio →
         </button>
         <p id="launcherError" class="text-xs text-red-400 font-semibold min-h-[16px] text-center"></p>
       </form>
@@ -103,7 +103,7 @@
 
     const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
       ? 'http://localhost:5000/api'
-      : 'https://luxe-salon-saas.onrender.com/api';
+      : `${window.location.origin}/api`;
 
     function updateSlug() {
       const val = document.getElementById('salonNameInput').value.trim();
@@ -149,6 +149,12 @@
         } else {
           if (data.token) localStorage.setItem(`${slug}_owner_token`, data.token);
         }
+
+        const deviceId = localStorage.getItem(`${slug}_device_id`) || 'dev_' + Math.random().toString(36).substring(2);
+        localStorage.setItem(`${slug}_device_id`, deviceId);
+        localStorage.setItem(`${slug}_trusted_device_${deviceId}`, 'true');
+        localStorage.removeItem(`${slug}_is_locked`);
+        localStorage.setItem(`${slug}_shop_name`, name);
 
         try { confetti({ particleCount: 40, spread: 50, origin: { y: 0.6 } }); } catch(e){}
         setTimeout(() => {

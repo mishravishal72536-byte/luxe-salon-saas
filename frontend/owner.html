@@ -35,17 +35,13 @@
       <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/30 text-amber-400 rounded-xl flex items-center justify-center mx-auto text-xl">🔐</div>
       <div>
         <h2 id="authTitle" class="text-base font-black text-white">Owner Studio Sign In</h2>
-        <p id="authSubtitle" class="text-[11px] text-neutral-400 mt-0.5">Enter salon name and security PIN to access.</p>
+        <p id="authSubtitle" class="text-[11px] text-neutral-400 mt-0.5">Enter security PIN to access dashboard.</p>
       </div>
 
       <form onsubmit="event.preventDefault(); playClickBeep(); submitAuth();" class="space-y-2.5 text-left pt-1">
         <div>
-          <label class="text-[10px] text-neutral-400 block mb-1 font-bold uppercase tracking-wider">Salon Name</label>
-          <input id="authSalonNameInput" type="text" placeholder="e.g. Deluxe Salon" oninput="updateSlugPreview()" class="w-full bg-neutral-950 border border-neutral-800 text-xs text-white focus:border-amber-400 rounded-xl px-3 py-2.5 focus:outline-none" required>
-        </div>
-        <div>
           <label class="text-[10px] text-neutral-400 block mb-1 font-bold uppercase tracking-wider">Security PIN</label>
-          <input id="authPinInput" type="password" maxlength="8" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-base font-mono text-amber-400 focus:border-amber-400 rounded-xl px-3 py-2 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
+          <input id="authPinInput" type="password" maxlength="8" placeholder="••••" class="w-full bg-neutral-950 border border-neutral-800 text-center tracking-widest text-base font-mono text-amber-400 focus:border-amber-400 rounded-xl px-3 py-2.5 focus:outline-none placeholder:text-xs placeholder:tracking-normal placeholder:text-neutral-600" required>
         </div>
         <button type="submit" id="authActionBtn" class="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs py-2.5 rounded-xl transition-all shadow-md mt-1 cursor-pointer">
           Sign In to Studio ➔
@@ -142,7 +138,7 @@
         <div class="flex items-center gap-1.5 shrink-0">
           <button onclick="playClickBeep(); openChangePinModal()" class="text-[11px] bg-slate-100 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 px-2.5 py-1 rounded-xl text-amber-500 font-semibold cursor-pointer">🔑 PIN</button>
           <button onclick="playClickBeep(); toggleTheme()" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs flex items-center justify-center cursor-pointer">🌙</button>
-          <button onclick="playClickBeep(); lockStudio()" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-red-500 text-xs flex items-center justify-center cursor-pointer">🔒</button>
+          <button onclick="playClickBeep(); lockStudio()" class="w-7 h-7 rounded-xl bg-slate-100 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-red-500 text-xs flex items-center justify-center cursor-pointer" title="Lock Studio">🔒</button>
         </div>
       </div>
 
@@ -314,10 +310,9 @@
 
     const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
       ? 'http://localhost:5000/api'
-      : 'https://luxe-salon-saas.onrender.com/api';
+      : `${window.location.origin}/api`;
     const urlParams = new URLSearchParams(window.location.search);
     let tenantSlug = urlParams.get('salon') || '';
-    let isFirstTimeSetup = false;
     let isShopOnline = true;
 
     function sanitizeHTML(str) {
@@ -325,12 +320,6 @@
       return String(str).replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
       );
-    }
-
-    function updateSlugPreview() {
-      const nameVal = document.getElementById('authSalonNameInput').value.trim();
-      const slug = nameVal ? nameVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : 'demo-salon';
-      document.getElementById('authTenantSlugBadge').innerText = slug;
     }
 
     function getAuthHeaders() {
@@ -343,7 +332,7 @@
 
     async function checkAuthOnLoad() {
       if (!tenantSlug) {
-        document.getElementById('authScreen').classList.remove('hidden');
+        window.location.href = 'index.html';
         return;
       }
       document.getElementById('authTenantSlugBadge').innerText = tenantSlug;
@@ -367,57 +356,16 @@
         } catch (e) {}
       }
 
-      try {
-        const res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ passcode: '' })
-        });
-        if (!res.ok) {
-          document.getElementById('authScreen').classList.remove('hidden');
-          return;
-        }
-        const data = await res.json();
-
-        if (data.status === 'DELETED') {
-          document.getElementById('authScreen').classList.add('hidden');
-          document.getElementById('disconnectReasonMsg').innerText = data.message;
-          document.getElementById('disconnectedModal').classList.remove('hidden');
-          return;
-        }
-
-        if (data.status === 'HALTED') {
-          document.getElementById('authScreen').classList.add('hidden');
-          document.getElementById('haltReasonMsg').innerText = data.message;
-          document.getElementById('haltScreen').classList.remove('hidden');
-          return;
-        }
-
-        document.getElementById('haltScreen').classList.add('hidden');
-
-        if (data.status === 'FIRST_TIME') {
-          isFirstTimeSetup = true;
-          document.getElementById('authTitle').innerText = 'Owner Studio Sign In';
-          document.getElementById('authSubtitle').innerText = 'Enter salon name and PIN to access dashboard.';
-          document.getElementById('authActionBtn').innerText = 'Sign In to Studio ➔';
-        }
-        document.getElementById('authScreen').classList.remove('hidden');
-      } catch (e) {
-        document.getElementById('authScreen').classList.remove('hidden');
-      }
+      // If not trusted or explicitly locked, show PIN prompt directly
+      document.getElementById('authScreen').classList.remove('hidden');
     }
 
     async function submitAuth() {
-      const salonName = document.getElementById('authSalonNameInput').value.trim();
       const pin = document.getElementById('authPinInput').value.trim();
       const errBox = document.getElementById('authErrorMsg');
       errBox.innerText = '';
 
-      if (!salonName) { errBox.innerText = 'Please enter your salon name.'; return; }
       if (!pin || pin.length < 4) { errBox.innerText = 'PIN must be at least 4 digits.'; return; }
-
-      tenantSlug = salonName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-      localStorage.setItem(`${tenantSlug}_shop_name`, salonName);
 
       try {
         let res = await fetch(`${API_BASE}/${tenantSlug}/auth/verify`, {
@@ -431,7 +379,7 @@
           let setRes = await fetch(`${API_BASE}/${tenantSlug}/auth/set-passcode`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ newPasscode: pin, shopName: salonName })
+            body: JSON.stringify({ newPasscode: pin, shopName: tenantSlug.replace(/-/g, ' ').toUpperCase() })
           });
           let setData = await setRes.json();
           if (!setData.success) {
@@ -456,9 +404,6 @@
 
         document.getElementById('authScreen').classList.add('hidden');
         try { confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } }); } catch (e) {}
-
-        const newUrl = `owner.html?salon=${tenantSlug}`;
-        window.history.replaceState({}, '', newUrl);
 
         initShopName();
         fetchState();
@@ -752,6 +697,10 @@
         }
         if (res.ok) {
           const data = await res.json();
+          if (data.shopName) {
+            localStorage.setItem(`${tenantSlug}_shop_name`, data.shopName);
+            initShopName();
+          }
           if (data.isOnline !== undefined) {
             isShopOnline = data.isOnline;
             updateShopOnlineUI();
